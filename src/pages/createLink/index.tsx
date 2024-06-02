@@ -12,6 +12,7 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
   );
   const [redirectLink, setRedirectLink] = useState<string>("");
   const [generatedLink, setGeneratedLink] = useState<string>("");
+  const [linkType, setLinkType] = useState<string>("Subscribe link"); // New state for dropdown
 
   function generateOfferId(): string {
     return Math.random().toString(36).substring(2, 10); // Generate a random offer ID
@@ -29,6 +30,7 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
       offerId: offerId,
       domain: domain,
       linkPattern: linkPattern,
+      linkType: linkType, // Include link type in the request
     });
 
     console.log(response.data);
@@ -72,6 +74,17 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
         <div className="form-group">
           <label>Link Pattern:</label>
           <input type="text" value={linkPattern} readOnly />
+        </div>
+        <div className="form-group">
+          <label>Link Type:</label>
+          <select
+            value={linkType}
+            onChange={(e) => setLinkType(e.target.value)}
+            style={{ width: "100%" }} // Set dropdown width to 100%
+          >
+            <option value="Subscribe link">Subscribe link</option>
+            <option value="Unsubscribe link">Unsubscribe link</option>
+          </select>
         </div>
         <div className="form-group">
           <label>Redirect Link:</label>
