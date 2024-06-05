@@ -7,6 +7,7 @@ const MonkeyMediaRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<div>Home</div>} />
+      <Route path="/home" element={<div>Home</div>} />
       <Route path="/login" element={<div>Login</div>} />
       <Route path="/report" element={<Report />} />
       <Route path="/create-link" element={<CreateLink />} />
