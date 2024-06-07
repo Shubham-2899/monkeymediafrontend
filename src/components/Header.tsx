@@ -8,12 +8,14 @@ import Typography from "@mui/material/Typography";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import Button from "@mui/material/Button";
 import mms from "../assets/mms.jpeg";
+import { useAuth } from "../contexts/UserAuthContext";
 
 const pages = ["Home", "Create link", "Mailing", "Report"];
 
 function ResponsiveAppBar() {
   const [openNav, setOpenNav] = React.useState(false);
   const location = useLocation();
+  const { user, logOut, setLogin } = useAuth();
 
   const handleOpenNavMenu = (_event: React.MouseEvent<HTMLElement>) => {
     setOpenNav(!openNav);
@@ -21,6 +23,19 @@ function ResponsiveAppBar() {
 
   const handleMenuItemClick = () => {
     setOpenNav(false); // Close the navigation menu after navigation
+  };
+
+  const handleLogOut = async () => {
+    try {
+      // logoutChannel.postMessage('Logout');
+      await logOut();
+      localStorage.removeItem("Auth Token");
+      localStorage.removeItem("user");
+      setLogin(false);
+      // navigate('/');
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -44,101 +59,126 @@ function ResponsiveAppBar() {
             />
           </Link>
         </div>
-        <Box
-          sx={{
-            display: { xs: "flex", md: "none" },
-            border: "1px solid #ddd",
-            borderRadius: "5px",
-            marginRight: "10px",
-            "&:hover": {
-              backgroundColor: "#ddd",
-            },
-            backgroundColor: openNav ? "#ddd" : "transparent",
-          }}
-        >
-          <IconButton
-            size="large"
-            aria-label="account of current user"
-            aria-controls="menu-appbar"
-            aria-haspopup="true"
-            onClick={handleOpenNavMenu}
-            color="inherit"
-            sx={{
-              padding: "5px",
-            }}
-            disableRipple={true}
-          >
-            <MenuRoundedIcon sx={{ color: "#888" }} />
-          </IconButton>
-          {openNav && (
-            <nav
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                width: "100%",
-                top: "57px",
-                left: 0,
-                position: "absolute",
-                color: "#777",
-                backgroundColor: "#fff",
-                boxShadow: "0 1px 0 #888",
-                zIndex: 9,
+        {user ? (
+          <>
+            <Box
+              sx={{
+                display: { xs: "flex", md: "none" },
+                border: "1px solid #ddd",
+                borderRadius: "5px",
+                marginRight: "10px",
+                "&:hover": {
+                  backgroundColor: "#ddd",
+                },
+                backgroundColor: openNav ? "#ddd" : "transparent",
+              }}
+            >
+              <IconButton
+                size="large"
+                aria-label="account of current user"
+                aria-controls="menu-appbar"
+                aria-haspopup="true"
+                onClick={handleOpenNavMenu}
+                color="inherit"
+                sx={{
+                  padding: "5px",
+                }}
+                disableRipple={true}
+              >
+                <MenuRoundedIcon sx={{ color: "#888" }} />
+              </IconButton>
+              {openNav && (
+                <nav
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    width: "100%",
+                    top: "57px",
+                    left: 0,
+                    position: "absolute",
+                    color: "#777",
+                    backgroundColor: "#fff",
+                    boxShadow: "0 1px 0 #888",
+                    zIndex: 9,
+                  }}
+                >
+                  {pages.map((page) => (
+                    <Link
+                      key={page}
+                      onClick={handleMenuItemClick}
+                      style={{
+                        paddingLeft: "10px",
+                        textDecoration: "none",
+                        color: "#777",
+                        backgroundColor:
+                          location.pathname ===
+                          `/${page.toLowerCase().replace(" ", "-")}`
+                            ? "#00acef"
+                            : "transparent",
+                      }}
+                      to={`/${page.toLowerCase().replace(" ", "-")}`}
+                    >
+                      <Typography
+                        variant="h6"
+                        style={{ textDecoration: "none", color: "#777" }}
+                      >
+                        {page}
+                      </Typography>
+                    </Link>
+                  ))}
+                  <Button
+                    onClick={handleLogOut}
+                    sx={{ paddingLeft: "10px", color: "#777" }}
+                  >
+                    Logout
+                  </Button>
+                </nav>
+              )}
+            </Box>
+            <Box
+              sx={{
+                flexGrow: 1,
+                display: {
+                  xs: "none",
+                  md: "flex",
+                  justifyContent: "end",
+                  gap: "25px",
+                  paddingRight: "30px",
+                },
               }}
             >
               {pages.map((page) => (
-                <Link
+                <Button
                   key={page}
-                  onClick={handleMenuItemClick}
-                  style={{
-                    paddingLeft: "10px",
-                    textDecoration: "none",
-                    color: "#777",
-                    backgroundColor:
-                      location.pathname ===
-                      `/${page.toLowerCase().replace(" ", "-")}`
-                        ? "#00acef"
-                        : "transparent",
-                  }}
+                  component={Link}
                   to={`/${page.toLowerCase().replace(" ", "-")}`}
+                  sx={{ my: 2, color: "#777", display: "block" }}
+                  onClick={handleMenuItemClick}
                 >
-                  <Typography
-                    variant="h6"
-                    style={{ textDecoration: "none", color: "#777" }}
-                    // to={`/${page.toLowerCase().replace(" ", "-")}`}
-                  >
+                  <Typography variant="h6" sx={{ fontWeight: "500" }}>
                     {page}
                   </Typography>
-                </Link>
+                </Button>
               ))}
-            </nav>
-          )}
-        </Box>
-        <Box
-          sx={{
-            flexGrow: 1,
-            display: {
-              xs: "none",
-              md: "flex",
-              justifyContent: "end",
-              gap: "25px",
-              paddingRight: "30px",
-            },
-          }}
-        >
-          {pages.map((page) => (
-            <Button
-              key={page}
-              component={Link}
-              to={`/${page.toLowerCase().replace(" ", "-")}`}
-              sx={{ my: 2, color: "#777", display: "block" }}
-              onClick={handleMenuItemClick}
-            >
-              <Typography variant="h6" sx={{ fontWeight: "500" }}>
-                {page}
-              </Typography>
-            </Button>
-          ))}
-        </Box>
+              <Button
+                onClick={handleLogOut}
+                sx={{ color: "#777", fontSize: "20px" }}
+              >
+                Logout
+              </Button>
+            </Box>
+          </>
+        ) : (
+          <Button
+            component={Link}
+            to="/signin"
+            sx={{ my: 2, mr: 2, color: "#777", display: "block" }}
+          >
+            <Typography variant="h6" sx={{ fontWeight: "500" }}>
+              Sign In
+            </Typography>
+          </Button>
+        )}
       </Toolbar>
     </AppBar>
   );
