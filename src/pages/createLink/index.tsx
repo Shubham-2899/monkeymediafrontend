@@ -10,6 +10,8 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
   const [linkPattern, setLinkPattern] = useState<string>(
     generateRandomPattern()
   );
+
+  console.log(setOfferId, setLinkPattern);
   const [redirectLink, setRedirectLink] = useState<string>("");
   const [generatedLink, setGeneratedLink] = useState<string>("");
   const [linkType, setLinkType] = useState<string>("Subscribe link"); // New state for dropdown
