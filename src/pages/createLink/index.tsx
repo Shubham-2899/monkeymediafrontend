@@ -25,13 +25,16 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
   }
 
   const handleAddOffer = async () => {
-    const response = await axios.post("http://localhost:8001/url", {
-      url: redirectLink,
-      offerId: offerId,
-      domain: domain,
-      linkPattern: linkPattern,
-      linkType: linkType, // Include link type in the request
-    });
+    const response = await axios.post(
+      `${import.meta.env.VITE_APP_API_BASE_URL}/url`,
+      {
+        url: redirectLink,
+        offerId: offerId,
+        domain: domain,
+        linkPattern: linkPattern,
+        linkType: linkType, // Include link type in the request
+      }
+    );
 
     console.log(response.data);
 

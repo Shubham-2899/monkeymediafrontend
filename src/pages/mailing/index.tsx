@@ -29,13 +29,18 @@ const EmailForm: React.FC = () => {
 
   const handleSend = async () => {
     try {
-      const response = await axios.post("http://localhost:8001/send-email", {
-        from,
-        to,
-        templateType,
-        emailTemplate,
-        mode,
-      });
+      const encodedEmailTemplate = encodeURIComponent(emailTemplate);
+
+      const response = await axios.post(
+        `${import.meta.env.VITE_APP_API_BASE_URL}/sendemail`,
+        {
+          from,
+          to,
+          templateType,
+          encodedEmailTemplate,
+          mode,
+        }
+      );
 
       console.log(response.data);
     } catch (error) {
@@ -161,9 +166,8 @@ const EmailForm: React.FC = () => {
           <Button
             variant={mode === "test" ? "contained" : "outlined"}
             color="success"
-            onClick={() => setMode("test")}          >
-
-
+            onClick={() => setMode("test")}
+          >
             Test
           </Button>
           <Button
