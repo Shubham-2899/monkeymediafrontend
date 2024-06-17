@@ -29,8 +29,8 @@ function ResponsiveAppBar() {
     try {
       // logoutChannel.postMessage('Logout');
       await logOut();
-      localStorage.removeItem("Auth Token");
-      localStorage.removeItem("user");
+      sessionStorage.removeItem("Auth Token");
+      sessionStorage.removeItem("user");
       setLogin(false);
       // navigate('/');
     } catch (error) {

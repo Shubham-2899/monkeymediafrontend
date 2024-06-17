@@ -11,7 +11,7 @@ import Home from "../pages/home";
 const MonkeyMediaRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<div>Home</div>} />
+      <Route path="/" element={<Signin />} />
       <Route path="/signin" element={<Signin />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route element={<ProtectedRoute />}>

@@ -28,6 +28,9 @@ const EmailForm: React.FC = () => {
   };
 
   const handleSend = async () => {
+    // Split the 'to' field by commas and trim any extra whitespace from each email address
+    const toEmails = to.split(",").map((email) => email.trim());
+
     try {
       const encodedEmailTemplate = encodeURIComponent(emailTemplate);
 
@@ -35,9 +38,9 @@ const EmailForm: React.FC = () => {
         `${import.meta.env.VITE_APP_API_BASE_URL}/sendemail`,
         {
           from,
-          to,
+          to: toEmails,
           templateType,
-          encodedEmailTemplate,
+          emailTemplate: encodedEmailTemplate,
           mode,
         }
       );
@@ -105,7 +108,7 @@ const EmailForm: React.FC = () => {
                 minRows={5}
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
-                placeholder="Enter recipient's email for testing"
+                placeholder="Enter recipient's emails, separated by commas"
                 style={{ width: "100%", padding: "10px" }}
               />
               <Box sx={{ display: "flex", gap: "25px" }}>

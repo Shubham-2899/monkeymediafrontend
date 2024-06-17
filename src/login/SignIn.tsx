@@ -32,9 +32,9 @@ const Signin = () => {
     try {
       const res = await logIn(email, password);
       let token = (res?.user as unknown as OAuthCredential).accessToken;
-      token && localStorage.setItem("Auth Token", token);
+      token && sessionStorage.setItem("Auth Token", token);
       const userData = JSON.stringify(res?.user);
-      if (userData) localStorage.setItem("user", userData);
+      if (userData) sessionStorage.setItem("user", userData);
       setLogin(true);
       navigate("/home");
     } catch (err) {
@@ -44,9 +44,9 @@ const Signin = () => {
   }
 
   useEffect(() => {
-    let authToken = localStorage.getItem("Auth Token");
+    let authToken = sessionStorage.getItem("Auth Token");
     if (authToken) {
-      navigate("/");
+      navigate("/home");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

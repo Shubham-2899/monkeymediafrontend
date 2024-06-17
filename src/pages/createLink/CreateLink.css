@@ -90,3 +90,14 @@ textarea {
   margin: 5px 0;
   box-sizing: border-box;
 }
+
+.add-offer-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.copied-message {
+  color: green;
+  font-weight: bold;
+  margin-top: 10px;
+}

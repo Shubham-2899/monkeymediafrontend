@@ -10,14 +10,16 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
   const [linkPattern, setLinkPattern] = useState<string>(
     generateRandomPattern()
   );
-
-  console.log(setOfferId, setLinkPattern);
   const [redirectLink, setRedirectLink] = useState<string>("");
   const [generatedLink, setGeneratedLink] = useState<string>("");
-  const [linkType, setLinkType] = useState<string>("Subscribe link"); // New state for dropdown
+  const [linkType, setLinkType] = useState<string>("Subscribe link");
+  const [copied, setCopied] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false); // New state for loading status
+
+  console.log(setOfferId, setLinkPattern);
 
   function generateOfferId(): string {
-    return Math.random().toString(36).substring(2, 10); // Generate a random offer ID
+    return Math.random().toString(36).substring(2, 10);
   }
 
   function generateRandomPattern(): string {
@@ -27,23 +29,28 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
   }
 
   const handleAddOffer = async () => {
-    const response = await axios.post(
-      `${import.meta.env.VITE_APP_API_BASE_URL}/url`,
-      {
-        url: redirectLink,
-        offerId: offerId,
-        domain: domain,
-        linkPattern: linkPattern,
-        linkType: linkType, // Include link type in the request
-      }
-    );
+    setLoading(true); // Set loading to true when API call starts
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_APP_API_BASE_URL}/url`,
+        {
+          url: redirectLink,
+          offerId: offerId,
+          domain: domain,
+          linkPattern: linkPattern,
+          linkType: linkType,
+        }
+      );
 
-    console.log(response.data);
+      setGeneratedLink(response.data.finalRedirectLink);
 
-    setGeneratedLink(response.data.finalRedirectLink);
-
-    // Log for debugging purposes
-    console.log(`Generated Link: ${response.data.finalRedirectLink}`);
+      // Log for debugging purposes
+      console.log(`Generated Link: ${response.data.finalRedirectLink}`);
+    } catch (error) {
+      console.error("Error creating offer link:", error);
+    } finally {
+      setLoading(false); // Set loading to false when API call ends
+    }
   };
 
   const handleCopyToClipboard = () => {
@@ -51,6 +58,8 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
       navigator.clipboard.writeText(generatedLink).then(
         () => {
           console.log("Link copied to clipboard!");
+          setCopied(true); // Set copied state to true when the link is copied
+          setTimeout(() => setCopied(false), 2000); // Reset copied state after 2 seconds
         },
         (err) => {
           console.error("Failed to copy the link: ", err);
@@ -85,7 +94,7 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
           <select
             value={linkType}
             onChange={(e) => setLinkType(e.target.value)}
-            style={{ width: "100%" }} // Set dropdown width to 100%
+            style={{ width: "100%" }}
           >
             <option value="Subscribe link">Subscribe link</option>
             <option value="Unsubscribe link">Unsubscribe link</option>
@@ -100,8 +109,12 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
             placeholder="https://www.exampleform.com/sdvdf?sub1=offerid"
           />
         </div>
-        <button onClick={handleAddOffer} className="add-offer-button">
-          Add Offer
+        <button
+          onClick={handleAddOffer}
+          className="add-offer-button"
+          disabled={loading}
+        >
+          {loading ? "Generating..." : "Add Offer"}
         </button>
         {generatedLink && (
           <div className="generated-link">
@@ -113,6 +126,7 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
             >
               Copy Link
             </button>
+            {copied && <span className="copied-message">Copied!</span>}
           </div>
         )}
       </div>
