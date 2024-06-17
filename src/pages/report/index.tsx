@@ -35,7 +35,7 @@ const Report: React.FC = () => {
     const fetchReportData = async () => {
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_APP_API_BASE_URL}/report`
+          `${import.meta.env.VITE_APP_API_BASE_URL}/url/reports`
         );
         setReportData(response.data);
         setLoading(false);

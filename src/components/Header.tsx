@@ -27,12 +27,10 @@ function ResponsiveAppBar() {
 
   const handleLogOut = async () => {
     try {
-      // logoutChannel.postMessage('Logout');
       await logOut();
       sessionStorage.removeItem("Auth Token");
       sessionStorage.removeItem("user");
       setLogin(false);
-      // navigate('/');
     } catch (error) {
       console.log(error);
     }
@@ -102,30 +100,32 @@ function ResponsiveAppBar() {
                     zIndex: 9,
                   }}
                 >
-                  {pages.map((page) => (
-                    <Link
-                      key={page}
-                      onClick={handleMenuItemClick}
-                      style={{
-                        paddingLeft: "10px",
-                        textDecoration: "none",
-                        color: "#777",
-                        backgroundColor:
-                          location.pathname ===
-                          `/${page.toLowerCase().replace(" ", "-")}`
-                            ? "#00acef"
-                            : "transparent",
-                      }}
-                      to={`/${page.toLowerCase().replace(" ", "-")}`}
-                    >
-                      <Typography
-                        variant="h6"
-                        style={{ textDecoration: "none", color: "#777" }}
+                  {pages.map((page) => {
+                    const to = `/${page.toLowerCase().replace(" ", "-")}`;
+                    return (
+                      <Link
+                        key={page}
+                        onClick={handleMenuItemClick}
+                        style={{
+                          paddingLeft: "10px",
+                          textDecoration: "none",
+                          color: "#777",
+                          backgroundColor:
+                            location.pathname === to
+                              ? "#00acef"
+                              : "transparent",
+                        }}
+                        to={to}
                       >
-                        {page}
-                      </Typography>
-                    </Link>
-                  ))}
+                        <Typography
+                          variant="h6"
+                          style={{ textDecoration: "none", color: "#777" }}
+                        >
+                          {page}
+                        </Typography>
+                      </Link>
+                    );
+                  })}
                   <Button
                     onClick={handleLogOut}
                     sx={{ paddingLeft: "10px", color: "#777" }}
@@ -147,19 +147,26 @@ function ResponsiveAppBar() {
                 },
               }}
             >
-              {pages.map((page) => (
-                <Button
-                  key={page}
-                  component={Link}
-                  to={`/${page.toLowerCase().replace(" ", "-")}`}
-                  sx={{ my: 2, color: "#777", display: "block" }}
-                  onClick={handleMenuItemClick}
-                >
-                  <Typography variant="h6" sx={{ fontWeight: "500" }}>
-                    {page}
-                  </Typography>
-                </Button>
-              ))}
+              {pages.map((page) => {
+                const to = `/${page.toLowerCase().replace(" ", "-")}`;
+                return (
+                  <Button
+                    key={page}
+                    component={Link}
+                    to={to}
+                    sx={{
+                      my: 2,
+                      color: location.pathname === to ? "#00acef" : "#777",
+                      display: "block",
+                    }}
+                    onClick={handleMenuItemClick}
+                  >
+                    <Typography variant="h6" sx={{ fontWeight: "500" }}>
+                      {page}
+                    </Typography>
+                  </Button>
+                );
+              })}
               <Button
                 onClick={handleLogOut}
                 sx={{ color: "#777", fontSize: "20px" }}

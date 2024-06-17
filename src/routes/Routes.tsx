@@ -11,10 +11,10 @@ import Home from "../pages/home";
 const MonkeyMediaRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<Signin />} />
       <Route path="/signin" element={<Signin />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route element={<ProtectedRoute />}>
+        <Route path="/" element={<Home />} />
         <Route path="/home" element={<Home />} />
         <Route path="/report" element={<Report />} />
         <Route path="/create-link" element={<CreateLink />} />
