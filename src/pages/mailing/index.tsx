@@ -14,6 +14,8 @@ import {
 
 const EmailForm: React.FC = () => {
   const [from, setFrom] = useState<string>("");
+  const [fromName, setFromName] = useState<string>("");
+  const [subject, setSubject] = useState<string>("");
   const [to, setTo] = useState<string>("");
   const [templateType, setTemplateType] = useState<string>("plain");
   const [emailTemplate, setEmailTemplate] = useState<string>("");
@@ -40,6 +42,8 @@ const EmailForm: React.FC = () => {
         `${import.meta.env.VITE_APP_API_BASE_URL}/sendemail`,
         {
           from,
+          fromName,
+          subject,
           to: toEmails,
           templateType,
           emailTemplate: encodedEmailTemplate,
@@ -109,6 +113,20 @@ const EmailForm: React.FC = () => {
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
                 placeholder="Enter sender's email"
+                sx={{ width: "60%" }}
+              />
+              <TextField
+                label="From Name"
+                value={fromName}
+                onChange={(e) => setFromName(e.target.value)}
+                placeholder="Enter sender's name"
+                sx={{ width: "60%" }}
+              />
+              <TextField
+                label="Subject"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="Enter email subject"
                 sx={{ width: "60%" }}
               />
               <TextareaAutosize
