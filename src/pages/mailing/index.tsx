@@ -30,6 +30,8 @@ const EmailForm: React.FC = () => {
   const handleSend = async () => {
     // Split the 'to' field by commas and trim any extra whitespace from each email address
     const toEmails = to.split(",").map((email) => email.trim());
+    // Retrieve the token from session storage
+    const token = sessionStorage.getItem("Auth Token");
 
     try {
       const encodedEmailTemplate = encodeURIComponent(emailTemplate);
@@ -42,6 +44,11 @@ const EmailForm: React.FC = () => {
           templateType,
           emailTemplate: encodedEmailTemplate,
           mode,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 

@@ -31,6 +31,8 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
   const handleAddOffer = async () => {
     setLoading(true); // Set loading to true when API call starts
     try {
+      // Retrieve the token from session storage
+      const token = sessionStorage.getItem("Auth Token");
       const response = await axios.post(
         `${import.meta.env.VITE_APP_API_BASE_URL}/url`,
         {
@@ -39,6 +41,11 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
           domain: domain,
           linkPattern: linkPattern,
           linkType: linkType,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
