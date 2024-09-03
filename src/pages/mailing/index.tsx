@@ -10,6 +10,10 @@ import {
   RadioGroup,
   FormControlLabel,
   FormControl,
+  CircularProgress,
+  Grid,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 
 const EmailForm: React.FC = () => {
@@ -20,6 +24,11 @@ const EmailForm: React.FC = () => {
   const [templateType, setTemplateType] = useState<string>("plain");
   const [emailTemplate, setEmailTemplate] = useState<string>("");
   const [mode, setMode] = useState<string>("test");
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  console.log("🚀 ~ isMobile:", isMobile);
 
   const handlePreview = () => {
     const newWindow = window.open();
@@ -30,14 +39,12 @@ const EmailForm: React.FC = () => {
   };
 
   const handleSend = async () => {
-    // Split the 'to' field by commas and trim any extra whitespace from each email address
     const toEmails = to.split(",").map((email) => email.trim());
-    // Retrieve the token from session storage
     const token = sessionStorage.getItem("Auth Token");
 
+    setLoading(true);
     try {
       const encodedEmailTemplate = encodeURIComponent(emailTemplate);
-
       const response = await axios.post(
         `${import.meta.env.VITE_APP_API_BASE_URL}/sendemail`,
         {
@@ -55,10 +62,11 @@ const EmailForm: React.FC = () => {
           },
         }
       );
-
       console.log(response.data);
     } catch (error) {
       console.error("Error sending email:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -70,32 +78,29 @@ const EmailForm: React.FC = () => {
         alignItems: "center",
         minHeight: "100vh",
         padding: "20px",
-        mt: "50px",
+        mt: "10px",
       }}
     >
-      <Box
-        sx={{
-          display: "flex",
-          gap: "20px",
-        }}
-      >
-        <Box
-          sx={{
-            width: "200px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px",
-          }}
-        >
-          <Typography variant="h6">Server IP's</Typography>
-          <TextareaAutosize
-            minRows={5}
-            placeholder="IP's available"
-            style={{ width: "100%", padding: "10px" }}
-            disabled
-          />
-        </Box>
-        <Box sx={{ minWidth: "600px" }}>
+      <Grid container spacing={2}>
+        <Grid item xs={12} sm={3}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+            }}
+          >
+            <Typography variant="h6">Server IP's</Typography>
+            <TextareaAutosize
+              minRows={5}
+              placeholder="IP's available"
+              style={{ width: "100%", padding: "10px" }}
+              disabled
+            />
+          </Box>
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
           <Box
             sx={{
               backgroundColor: "white",
@@ -107,27 +112,37 @@ const EmailForm: React.FC = () => {
             <Typography variant="h6" gutterBottom>
               Email Form
             </Typography>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: !isMobile ? "row" : "column",
+                gap: "15px",
+                flexWrap: "wrap",
+              }}
+            >
               <TextField
                 label="From"
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
                 placeholder="Enter sender's email"
-                sx={{ width: "60%" }}
+                sx={{ width: !isMobile ? "48%" : "100%" }}
+                size="small"
               />
               <TextField
                 label="From Name"
                 value={fromName}
                 onChange={(e) => setFromName(e.target.value)}
                 placeholder="Enter sender's name"
-                sx={{ width: "60%" }}
+                sx={{ width: !isMobile ? "48%" : "100%" }}
+                size="small"
               />
               <TextField
                 label="Subject"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder="Enter email subject"
-                sx={{ width: "60%" }}
+                sx={{ width: "100%" }}
+                size="small"
               />
               <TextareaAutosize
                 minRows={5}
@@ -136,7 +151,7 @@ const EmailForm: React.FC = () => {
                 placeholder="Enter recipient's emails, separated by commas"
                 style={{ width: "100%", padding: "10px" }}
               />
-              <Box sx={{ display: "flex", gap: "25px" }}>
+              <Box sx={{ display: "flex", gap: "25px", flexWrap: "wrap" }}>
                 <FormControl component="fieldset">
                   <Typography>Email Template Type:</Typography>
                   <RadioGroup
@@ -162,10 +177,11 @@ const EmailForm: React.FC = () => {
                     color="success"
                     onClick={handlePreview}
                     sx={{ mr: "20px" }}
+                    size="small"
                   >
                     Preview
                   </Button>
-                  <Button variant="contained" color="warning">
+                  <Button variant="contained" color="warning" size="small">
                     Edit
                   </Button>
                 </div>
@@ -182,38 +198,42 @@ const EmailForm: React.FC = () => {
               />
             </Box>
           </Box>
-        </Box>
-        <Box
-          sx={{
-            width: "200px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px",
-          }}
-        >
-          <Button
-            variant={mode === "test" ? "contained" : "outlined"}
-            color="success"
-            onClick={() => setMode("test")}
+        </Grid>
+
+        <Grid item xs={12} sm={3}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+            }}
           >
-            Test
-          </Button>
-          <Button
-            variant={mode === "bulk" ? "contained" : "outlined"}
-            color="success"
-            onClick={() => setMode("bulk")}
-          >
-            Bulk
-          </Button>
-        </Box>
-      </Box>
+            <Button
+              variant={mode === "test" ? "contained" : "outlined"}
+              color="success"
+              onClick={() => setMode("test")}
+            >
+              Test
+            </Button>
+            <Button
+              variant={mode === "bulk" ? "contained" : "outlined"}
+              color="success"
+              onClick={() => setMode("bulk")}
+            >
+              Bulk
+            </Button>
+          </Box>
+        </Grid>
+      </Grid>
+
       <Button
         variant="contained"
         color="primary"
         onClick={handleSend}
-        sx={{ mt: "20px" }}
+        sx={{ mt: "20px", width: "200px" }}
+        disabled={loading}
       >
-        SEND
+        {loading ? <CircularProgress size={24} color="inherit" /> : "SEND"}
       </Button>
     </Box>
   );
