@@ -6,27 +6,23 @@ interface CreateLinkProps {}
 
 const CreateLink: React.FC<CreateLinkProps> = () => {
   const [domain, setDomain] = useState<string>("");
-  const [offerId, setOfferId] = useState<string>(generateOfferId());
-  const [linkPattern, setLinkPattern] = useState<string>(
-    generateRandomPattern()
-  );
+  const [offerId, setOfferId] = useState<string>("");
+  const [linkPattern, setLinkPattern] = useState<string>("");
   const [redirectLink, setRedirectLink] = useState<string>("");
   const [generatedLink, setGeneratedLink] = useState<string>("");
   const [linkType, setLinkType] = useState<string>("Subscribe link");
   const [copied, setCopied] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false); // New state for loading status
+  const [loading, setLoading] = useState<boolean>(false);
 
-  console.log(setOfferId, setLinkPattern);
+  // function generateOfferId(): string {
+  //   return Math.random().toString(36).substring(2, 10);
+  // }
 
-  function generateOfferId(): string {
-    return Math.random().toString(36).substring(2, 10);
-  }
-
-  function generateRandomPattern(): string {
-    return `/${Math.random().toString(36).substring(2, 10)}/${Math.random()
-      .toString(36)
-      .substring(2, 10)}`;
-  }
+  // function generateRandomPattern(): string {
+  //   return `/${Math.random().toString(36).substring(2, 10)}/${Math.random()
+  //     .toString(36)
+  //     .substring(2, 10)}`;
+  // }
 
   const handleAddOffer = async () => {
     setLoading(true); // Set loading to true when API call starts
@@ -90,11 +86,21 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
         </div>
         <div className="form-group">
           <label>Offer ID:</label>
-          <input type="text" value={offerId} readOnly />
+          <input
+            type="text"
+            value={offerId}
+            onChange={(e) => setOfferId(e.target.value)}
+            placeholder="Enter Offer ID"
+          />
         </div>
         <div className="form-group">
           <label>Link Pattern:</label>
-          <input type="text" value={linkPattern} readOnly />
+          <input
+            type="text"
+            value={linkPattern}
+            onChange={(e) => setLinkPattern(e.target.value)}
+            placeholder="/abc123/xyz456"
+          />
         </div>
         <div className="form-group">
           <label>Link Type:</label>
