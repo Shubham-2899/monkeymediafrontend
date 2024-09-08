@@ -14,21 +14,33 @@ import {
   Grid,
   useMediaQuery,
   useTheme,
+  Alert,
+  AlertTitle,
+  Collapse,
+  IconButton,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 
 const EmailForm: React.FC = () => {
   const [from, setFrom] = useState<string>("");
   const [fromName, setFromName] = useState<string>("");
   const [subject, setSubject] = useState<string>("");
   const [to, setTo] = useState<string>("");
-  const [templateType, setTemplateType] = useState<string>("plain");
+  const [templateType, setTemplateType] = useState<string>("html");
   const [emailTemplate, setEmailTemplate] = useState<string>("");
   const [mode, setMode] = useState<string>("test");
   const [loading, setLoading] = useState<boolean>(false);
+  const [offerId, setOfferId] = useState<string>("");
+
+  // Alert state as an object
+  const [alert, setAlert] = useState({
+    open: false,
+    severity: "success" as "success" | "error",
+    message: "",
+  });
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  console.log("🚀 ~ isMobile:", isMobile);
 
   const handlePreview = () => {
     const newWindow = window.open();
@@ -39,6 +51,16 @@ const EmailForm: React.FC = () => {
   };
 
   const handleSend = async () => {
+    // Basic validation to ensure all fields are filled
+    if (!from || !fromName || !subject || !to || !emailTemplate || !offerId) {
+      setAlert({
+        open: true,
+        severity: "error",
+        message: "Please fill in all fields before sending.",
+      });
+      return;
+    }
+
     const toEmails = to.split(",").map((email) => email.trim());
     const token = sessionStorage.getItem("Auth Token");
 
@@ -55,6 +77,7 @@ const EmailForm: React.FC = () => {
           templateType,
           emailTemplate: encodedEmailTemplate,
           mode,
+          offerId,
         },
         {
           headers: {
@@ -63,8 +86,22 @@ const EmailForm: React.FC = () => {
         }
       );
       console.log(response.data);
+
+      // Set success alert
+      setAlert({
+        open: true,
+        severity: "success",
+        message: "Emails sent successfully!",
+      });
     } catch (error) {
       console.error("Error sending email:", error);
+
+      // Set error alert
+      setAlert({
+        open: true,
+        severity: "error",
+        message: "Failed to send emails. Please try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -208,6 +245,14 @@ const EmailForm: React.FC = () => {
               gap: "10px",
             }}
           >
+            <TextField
+              label="OfferId"
+              value={offerId}
+              onChange={(e) => setOfferId(e.target.value)}
+              placeholder="Enter Offer Id"
+              required
+              size="small"
+            />
             <Button
               variant={mode === "test" ? "contained" : "outlined"}
               color="success"
@@ -225,7 +270,27 @@ const EmailForm: React.FC = () => {
           </Box>
         </Grid>
       </Grid>
-
+      <Collapse in={alert.open} sx={{ mt: 2 }}>
+        <Alert
+          severity={alert.severity}
+          action={
+            <IconButton
+              aria-label="close"
+              color="inherit"
+              size="small"
+              onClick={() => setAlert({ ...alert, open: false })}
+            >
+              <CloseIcon fontSize="inherit" />
+            </IconButton>
+          }
+          sx={{ mb: 2 }}
+        >
+          <AlertTitle>
+            {alert.severity === "success" ? "Success" : "Error"}
+          </AlertTitle>
+          {alert.message}
+        </Alert>
+      </Collapse>
       <Button
         variant="contained"
         color="primary"
