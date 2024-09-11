@@ -11,6 +11,8 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
   const [redirectLink, setRedirectLink] = useState<string>("");
   const [generatedLink, setGeneratedLink] = useState<string>("");
   const [linkType, setLinkType] = useState<string>("Subscribe link");
+  const [campaignId, setCampaignId] = useState<string>("");
+
   const [copied, setCopied] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -37,6 +39,7 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
           domain: domain,
           linkPattern: linkPattern,
           linkType: linkType,
+          campaignId: campaignId,
         },
         {
           headers: {
@@ -82,6 +85,15 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
             value={domain}
             onChange={(e) => setDomain(e.target.value)}
             placeholder="https://healthcare.info"
+          />
+        </div>
+        <div className="form-group">
+          <label>Campaign ID:</label>
+          <input
+            type="text"
+            value={campaignId}
+            onChange={(e) => setCampaignId(e.target.value)}
+            placeholder="Affiliate Campaign ID"
           />
         </div>
         <div className="form-group">

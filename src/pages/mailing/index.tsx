@@ -31,8 +31,7 @@ const EmailForm: React.FC = () => {
   const [mode, setMode] = useState<string>("test");
   const [loading, setLoading] = useState<boolean>(false);
   const [offerId, setOfferId] = useState<string>("");
-
-  // Alert state as an object
+  const [campaignId, setCampaignId] = useState<string>("");
   const [alert, setAlert] = useState({
     open: false,
     severity: "success" as "success" | "error",
@@ -52,7 +51,15 @@ const EmailForm: React.FC = () => {
 
   const handleSend = async () => {
     // Basic validation to ensure all fields are filled
-    if (!from || !fromName || !subject || !to || !emailTemplate || !offerId) {
+    if (
+      !from ||
+      !fromName ||
+      !subject ||
+      !to ||
+      !emailTemplate ||
+      !offerId ||
+      !campaignId
+    ) {
       setAlert({
         open: true,
         severity: "error",
@@ -78,6 +85,7 @@ const EmailForm: React.FC = () => {
           emailTemplate: encodedEmailTemplate,
           mode,
           offerId,
+          campaignId,
         },
         {
           headers: {
@@ -251,6 +259,13 @@ const EmailForm: React.FC = () => {
               onChange={(e) => setOfferId(e.target.value)}
               placeholder="Enter Offer Id"
               required
+              size="small"
+            />
+            <TextField
+              label="Campaign/Affiliate Offer Id"
+              value={campaignId}
+              onChange={(e) => setCampaignId(e.target.value)}
+              placeholder="Enter Campaign/Affiliate Offer Id"
               size="small"
             />
             <Button
