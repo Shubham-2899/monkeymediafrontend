@@ -60,6 +60,7 @@ export function UserAuthContextProvider({ children }: AuthProviderProps) {
     const unsubscribe = onAuthStateChanged(auth, (currentuser) => {
       setUser(currentuser);
       setLoading(false);
+      setLogin(true);
       const token = sessionStorage.getItem("authToken");
       if (token) {
         // Decode the JWT token

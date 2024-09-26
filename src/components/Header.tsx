@@ -56,7 +56,7 @@ function ResponsiveAppBar() {
             />
           </Link>
         </div>
-        {!login ? (
+        {!!login ? (
           <>
             <Box
               sx={{
