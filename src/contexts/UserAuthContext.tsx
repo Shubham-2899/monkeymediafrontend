@@ -12,20 +12,10 @@ import {
   browserSessionPersistence,
 } from "firebase/auth";
 import { auth } from "../../firebase";
-import React from "react";
-import {
-  AuthContextModel,
-  AuthProviderProps,
-  UserContextState,
-} from "../Interfaces/index";
+import { AuthContextModel, AuthProviderProps } from "../Interfaces/index";
+import { jwtDecode as jwtDecodeFn } from "jwt-decode";
 
-export const UserStateContext = createContext<UserContextState>(
-  {} as UserContextState
-);
-
-const userAuthContext = React.createContext<AuthContextModel>(
-  {} as AuthContextModel
-);
+const userAuthContext = createContext<AuthContextModel>({} as AuthContextModel);
 
 export function useAuth(): AuthContextModel {
   return useContext(userAuthContext);
@@ -34,13 +24,19 @@ export function useAuth(): AuthContextModel {
 export function UserAuthContextProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [login, setLogin] = useState(false);
-
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
   async function logIn(email: string, password: string) {
     //   const persistence = false  //remember me functionality
     //  ? auth.Persistence.LOCAL
     //  : auth.Auth.Persistence.SESSION;
     await setPersistence(auth, browserSessionPersistence);
-    return signInWithEmailAndPassword(auth, email, password);
+    const res: any = await signInWithEmailAndPassword(auth, email, password);
+    const token = res?.user?.accessToken;
+    if (token) {
+      sessionStorage.setItem("authToken", token);
+    }
+    return res;
   }
   function signUp(email: string, password: string, username: string) {
     console.log("username:", username);
@@ -63,6 +59,19 @@ export function UserAuthContextProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentuser) => {
       setUser(currentuser);
+      setLoading(false);
+      const token = sessionStorage.getItem("authToken");
+      if (token) {
+        // Decode the JWT token
+        const decodedToken: any = jwtDecodeFn(token);
+
+        // Check if the token has the 'admin' claim
+        if (decodedToken?.admin) {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+        }
+      }
     });
 
     return () => {
@@ -78,6 +87,8 @@ export function UserAuthContextProvider({ children }: AuthProviderProps) {
     googleSignIn,
     login,
     setLogin,
+    isAdmin,
+    loading,
     resetPassword,
   };
 

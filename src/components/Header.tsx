@@ -15,7 +15,7 @@ const pages = ["Home", "Create link", "Mailing", "Report"];
 function ResponsiveAppBar() {
   const [openNav, setOpenNav] = React.useState(false);
   const location = useLocation();
-  const { user, logOut, setLogin } = useAuth();
+  const { login, logOut, setLogin, isAdmin } = useAuth();
 
   const handleOpenNavMenu = (_event: React.MouseEvent<HTMLElement>) => {
     setOpenNav(!openNav);
@@ -28,8 +28,7 @@ function ResponsiveAppBar() {
   const handleLogOut = async () => {
     try {
       await logOut();
-      sessionStorage.removeItem("Auth Token");
-      sessionStorage.removeItem("user");
+      sessionStorage.removeItem("authToken");
       setLogin(false);
     } catch (error) {
       console.log(error);
@@ -57,7 +56,7 @@ function ResponsiveAppBar() {
             />
           </Link>
         </div>
-        {user ? (
+        {!login ? (
           <>
             <Box
               sx={{
@@ -126,6 +125,29 @@ function ResponsiveAppBar() {
                       </Link>
                     );
                   })}
+                  {/* Conditionally render Admin option for mobile view */}
+                  {isAdmin && (
+                    <Link
+                      to="/admin/users"
+                      onClick={handleMenuItemClick}
+                      style={{
+                        paddingLeft: "10px",
+                        textDecoration: "none",
+                        color: "#777",
+                        backgroundColor:
+                          location.pathname === "/admin/users"
+                            ? "#00acef"
+                            : "transparent",
+                      }}
+                    >
+                      <Typography
+                        variant="h6"
+                        style={{ textDecoration: "none", color: "#777" }}
+                      >
+                        Admin
+                      </Typography>
+                    </Link>
+                  )}
                   <Button
                     onClick={handleLogOut}
                     sx={{ paddingLeft: "10px", color: "#777" }}
@@ -167,6 +189,24 @@ function ResponsiveAppBar() {
                   </Button>
                 );
               })}
+              {/* Conditionally render Admin option for desktop view */}
+              {isAdmin && (
+                <Button
+                  component={Link}
+                  to="/admin/users"
+                  sx={{
+                    my: 2,
+                    color:
+                      location.pathname === "/admin/users" ? "#00acef" : "#777",
+                    display: "block",
+                  }}
+                  onClick={handleMenuItemClick}
+                >
+                  <Typography variant="h6" sx={{ fontWeight: "500" }}>
+                    Admin
+                  </Typography>
+                </Button>
+              )}
               <Button
                 onClick={handleLogOut}
                 sx={{ color: "#777", fontSize: "20px" }}

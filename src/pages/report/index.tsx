@@ -34,7 +34,7 @@ const Report: React.FC = () => {
   useEffect(() => {
     const fetchReportData = async () => {
       try {
-        const token = sessionStorage.getItem("Auth Token");
+        const token = sessionStorage.getItem("authToken");
 
         const response = await axios.get(
           `${import.meta.env.VITE_APP_API_BASE_URL}/url/reports`,

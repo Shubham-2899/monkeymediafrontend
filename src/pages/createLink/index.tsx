@@ -30,7 +30,7 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
     setLoading(true); // Set loading to true when API call starts
     try {
       // Retrieve the token from session storage
-      const token = sessionStorage.getItem("Auth Token");
+      const token = sessionStorage.getItem("authToken");
       const response = await axios.post(
         `${import.meta.env.VITE_APP_API_BASE_URL}/url`,
         {

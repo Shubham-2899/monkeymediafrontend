@@ -15,6 +15,8 @@ export interface AuthContextModel {
   auth?: Auth;
   user: User | null;
   login: Boolean;
+  isAdmin: Boolean;
+  loading: Boolean;
   setLogin: React.Dispatch<React.SetStateAction<boolean>>;
   logIn(email: string, password: string): Promise<void | UserCredential>;
   signUp(

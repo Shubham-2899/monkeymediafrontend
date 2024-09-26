@@ -14,7 +14,6 @@ import {
 // import Loading from '../../components/Loading';
 import "./signup-signin-styles.css";
 import { useUserAuth } from "../contexts/UserAuthContext";
-import { OAuthCredential } from "firebase/auth";
 
 const Signin = () => {
   const [error, setError] = useState<any>("");
@@ -31,10 +30,10 @@ const Signin = () => {
     setLoading(true);
     try {
       const res = await logIn(email, password);
-      let token = (res?.user as unknown as OAuthCredential).accessToken;
-      token && sessionStorage.setItem("Auth Token", token);
-      const userData = JSON.stringify(res?.user);
-      if (userData) sessionStorage.setItem("user", userData);
+      // let token = (res?.user as unknown as OAuthCredential).accessToken;
+      // token && sessionStorage.setItem("authToken", token);
+      // const userData = JSON.stringify(res?.user);
+      // if (userData) sessionStorage.setItem("user", userData);
       setLogin(true);
       navigate("/home");
     } catch (err) {
@@ -44,7 +43,7 @@ const Signin = () => {
   }
 
   useEffect(() => {
-    let authToken = sessionStorage.getItem("Auth Token");
+    let authToken = sessionStorage.getItem("authToken");
     if (authToken) {
       navigate("/home");
     }

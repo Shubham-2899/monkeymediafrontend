@@ -69,7 +69,7 @@ const EmailForm: React.FC = () => {
     }
 
     const toEmails = to.split(",").map((email) => email.trim());
-    const token = sessionStorage.getItem("Auth Token");
+    const token = sessionStorage.getItem("authToken");
 
     setLoading(true);
     try {
