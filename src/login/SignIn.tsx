@@ -29,7 +29,7 @@ const Signin = () => {
     setError("");
     setLoading(true);
     try {
-      const res = await logIn(email, password);
+      await logIn(email, password);
       // let token = (res?.user as unknown as OAuthCredential).accessToken;
       // token && sessionStorage.setItem("authToken", token);
       // const userData = JSON.stringify(res?.user);
