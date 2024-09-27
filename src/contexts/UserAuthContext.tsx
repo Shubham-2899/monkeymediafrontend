@@ -35,6 +35,14 @@ export function UserAuthContextProvider({ children }: AuthProviderProps) {
     const token = res?.user?.accessToken;
     if (token) {
       sessionStorage.setItem("authToken", token);
+      const decodedToken: any = jwtDecodeFn(token);
+
+      // Check if the token has the 'admin' claim
+      if (decodedToken?.admin) {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+      }
     }
     return res;
   }
@@ -60,9 +68,9 @@ export function UserAuthContextProvider({ children }: AuthProviderProps) {
     const unsubscribe = onAuthStateChanged(auth, (currentuser) => {
       setUser(currentuser);
       setLoading(false);
-      setLogin(true);
       const token = sessionStorage.getItem("authToken");
       if (token) {
+        setLogin(true);
         // Decode the JWT token
         const decodedToken: any = jwtDecodeFn(token);
 
