@@ -10,6 +10,7 @@ import {
   Box,
   Typography,
   Alert,
+  CircularProgress,
 } from "@mui/material";
 // import Loading from '../../components/Loading';
 import "./signup-signin-styles.css";
@@ -53,8 +54,14 @@ const Signin = () => {
   return (
     <>
       {loading ? (
-        // <Loading />
-        <></>
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          height="100vh"
+        >
+          <CircularProgress />
+        </Box>
       ) : (
         <Box className="signin">
           <Avatar sx={{ m: 1, bgcolor: "secondary.main" }}>
