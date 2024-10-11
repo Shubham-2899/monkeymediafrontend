@@ -8,6 +8,7 @@ import Home from "../pages/home";
 import ProtectedRoute from "./ProtectedRoute";
 import AdminRoute from "./AdminRoute";
 import Users from "../pages/users";
+import AddEmails from "../pages/add-emails";
 
 const MonkeyMediaRoutes = () => {
   return (
@@ -28,6 +29,7 @@ const MonkeyMediaRoutes = () => {
       {/* Admin Routes - Only accessible by admins */}
       <Route element={<AdminRoute />}>
         <Route path="/admin/users" element={<Users />} />
+        <Route path="/admin/email-list" element={<AddEmails />} />
         {/* Add other admin routes here */}
       </Route>
 
