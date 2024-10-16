@@ -9,6 +9,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import AdminRoute from "./AdminRoute";
 import Users from "../pages/users";
 import AddEmails from "../pages/add-emails";
+import BullMQDashboard from "../pages/bullmq-dashboard";
 
 const MonkeyMediaRoutes = () => {
   return (
@@ -30,6 +31,7 @@ const MonkeyMediaRoutes = () => {
       <Route element={<AdminRoute />}>
         <Route path="/admin/users" element={<Users />} />
         <Route path="/admin/email-list" element={<AddEmails />} />
+        <Route path="/admin/dashboard" element={<BullMQDashboard />} />
         {/* Add other admin routes here */}
       </Route>
 
