@@ -20,6 +20,7 @@ import {
   IconButton,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import { validateEmails } from "../../heplers/UserDataValidation";
 
 const EmailForm: React.FC = () => {
   const [from, setFrom] = useState<string>("");
@@ -68,7 +69,7 @@ const EmailForm: React.FC = () => {
       return;
     }
 
-    const toEmails = to.split(",").map((email) => email.trim());
+    const toEmails = validateEmails(to);
     const token = sessionStorage.getItem("authToken");
 
     setLoading(true);

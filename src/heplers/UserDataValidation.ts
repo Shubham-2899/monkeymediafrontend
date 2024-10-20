@@ -1,18 +1,18 @@
-import { Errors } from '../Interfaces';
+import { Errors } from "../Interfaces";
 
 export function userDataValidation(
   email: string,
   password: string,
   confirmPassword: string,
   username: string,
-  contact_number: string,
+  contact_number: string
 ): Errors {
   let errors: Errors = {
-    emailError: '',
-    passwordError: '',
-    confirmPassError: '',
-    nameError: '',
-    contactError: '',
+    emailError: "",
+    passwordError: "",
+    confirmPassError: "",
+    nameError: "",
+    contactError: "",
   };
 
   errors.nameError = validateUsername(username);
@@ -20,7 +20,7 @@ export function userDataValidation(
   errors.emailError = validateEmail(email);
   errors.passwordError = validatePassword(password);
   if (password !== confirmPassword) {
-    errors.confirmPassError = 'Password does not match';
+    errors.confirmPassError = "Password does not match";
   }
 
   return errors;
@@ -28,36 +28,36 @@ export function userDataValidation(
 
 export const validatePassword = (password: string) => {
   if (password.length < 6) {
-    return 'Password length must be greater than 6';
+    return "Password length must be greater than 6";
   } else if (password.length > 10) {
-    return 'Password length can not be greater than 15';
+    return "Password length can not be greater than 15";
   }
-  return '';
+  return "";
 };
 
 export const validateUsername = (username: string) => {
   if (username.length <= 0) {
-    return 'Username can not be empty';
+    return "Username can not be empty";
   } else if (/\d/i.test(username)) {
-    return 'Username contains alphabets only';
+    return "Username contains alphabets only";
   }
-  return '';
+  return "";
 };
 
 export const validateEmail = (email: string) => {
   const regex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(.\w{2,3})+$/;
   if (!regex.test(email)) {
-    return 'This is not a valid email format!';
+    return "This is not a valid email format!";
   }
-  return '';
+  return "";
 };
 
 export const validateContactNumber = (contact_number: string) => {
   const mobileno = /^((\\+91-?)|0)?[0-9]{10}$/;
   if (!contact_number.match(mobileno)) {
-    return 'Invalid Contact Number';
+    return "Invalid Contact Number";
   }
-  return '';
+  return "";
 };
 
 export const hasErrorsInUserData = (errObj: Errors) => {
@@ -71,3 +71,16 @@ export const hasErrorsInUserData = (errObj: Errors) => {
     return false;
   return true;
 };
+
+/**
+ *
+ * @param to comma separated email id's
+ * @returns array of valid emails
+ */
+export function validateEmails(to: string) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return to
+    .split(",")
+    .map((email) => email.trim())
+    .filter((email) => email && emailRegex.test(email));
+}
