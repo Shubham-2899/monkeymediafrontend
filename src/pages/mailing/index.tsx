@@ -95,11 +95,15 @@ const EmailForm: React.FC = () => {
       );
       console.log(response.data);
 
+      const message =
+        mode === "test"
+          ? `${response?.data?.emailSent} Emails sent successfully!`
+          : `Emails added to sending job ${response?.data?.jobId}`;
       // Set success alert
       setAlert({
         open: true,
         severity: "success",
-        message: "Emails sent successfully!",
+        message: message,
       });
     } catch (error) {
       console.error("Error sending email:", error);
