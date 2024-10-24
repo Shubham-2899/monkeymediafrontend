@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import axios from "axios";
 import {
   Box,
   Button,
@@ -21,6 +20,7 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { validateEmails } from "../../heplers/UserDataValidation";
+import { apiPost } from "../../utils/api";
 
 const EmailForm: React.FC = () => {
   const [from, setFrom] = useState<string>("");
@@ -70,30 +70,39 @@ const EmailForm: React.FC = () => {
     }
 
     const toEmails = validateEmails(to);
-    const token = sessionStorage.getItem("authToken");
-
     setLoading(true);
     try {
       const encodedEmailTemplate = encodeURIComponent(emailTemplate);
-      const response = await axios.post(
-        `${import.meta.env.VITE_APP_API_BASE_URL}/sendemail`,
-        {
-          from,
-          fromName,
-          subject,
-          to: toEmails,
-          templateType,
-          emailTemplate: encodedEmailTemplate,
-          mode,
-          offerId,
-          campaignId,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await apiPost("/sendemail", {
+        from,
+        fromName,
+        subject,
+        to: toEmails,
+        templateType,
+        emailTemplate: encodedEmailTemplate,
+        mode,
+        offerId,
+        campaignId,
+      });
+      // const response = await axios.post(
+      //   `${import.meta.env.VITE_APP_API_BASE_URL}/sendemail`,
+      //   {
+      //     from,
+      //     fromName,
+      //     subject,
+      //     to: toEmails,
+      //     templateType,
+      //     emailTemplate: encodedEmailTemplate,
+      //     mode,
+      //     offerId,
+      //     campaignId,
+      //   },
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${token}`,
+      //     },
+      //   }
+      // );
       console.log(response.data);
 
       const message =

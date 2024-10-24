@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./CreateLink.css";
-import axios from "axios";
+import { apiPost } from "../../utils/api";
 
 interface CreateLinkProps {}
 
@@ -16,37 +16,33 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
   const [copied, setCopied] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // function generateOfferId(): string {
-  //   return Math.random().toString(36).substring(2, 10);
-  // }
-
-  // function generateRandomPattern(): string {
-  //   return `/${Math.random().toString(36).substring(2, 10)}/${Math.random()
-  //     .toString(36)
-  //     .substring(2, 10)}`;
-  // }
-
   const handleAddOffer = async () => {
-    setLoading(true); // Set loading to true when API call starts
+    setLoading(true);
     try {
-      // Retrieve the token from session storage
-      const token = sessionStorage.getItem("authToken");
-      const response = await axios.post(
-        `${import.meta.env.VITE_APP_API_BASE_URL}/url`,
-        {
-          url: redirectLink,
-          offerId: offerId,
-          domain: domain,
-          linkPattern: linkPattern,
-          linkType: linkType,
-          campaignId: campaignId,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await apiPost("/url", {
+        url: redirectLink,
+        offerId: offerId,
+        domain: domain,
+        linkPattern: linkPattern,
+        linkType: linkType,
+        campaignId: campaignId,
+      });
+      // const response = await axios.post(
+      //   `${import.meta.env.VITE_APP_API_BASE_URL}/url`,
+      //   {
+      //     url: redirectLink,
+      //     offerId: offerId,
+      //     domain: domain,
+      //     linkPattern: linkPattern,
+      //     linkType: linkType,
+      //     campaignId: campaignId,
+      //   },
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${token}`,
+      //     },
+      //   }
+      // );
 
       setGeneratedLink(response.data.finalRedirectLink);
 
@@ -55,7 +51,7 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
     } catch (error) {
       console.error("Error creating offer link:", error);
     } finally {
-      setLoading(false); // Set loading to false when API call ends
+      setLoading(false);
     }
   };
 

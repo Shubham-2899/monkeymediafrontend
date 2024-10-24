@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import {
   Table,
   TableBody,
@@ -14,6 +13,7 @@ import {
   Alert,
   Box,
 } from "@mui/material";
+import { apiGet } from "../../utils/api";
 
 interface ReportData {
   offerId: string;
@@ -34,16 +34,15 @@ const Report: React.FC = () => {
   useEffect(() => {
     const fetchReportData = async () => {
       try {
-        const token = sessionStorage.getItem("authToken");
-
-        const response = await axios.get(
-          `${import.meta.env.VITE_APP_API_BASE_URL}/url/reports`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await apiGet("/url/reports");
+        // const response = await axios.get(
+        //   `${import.meta.env.VITE_APP_API_BASE_URL}/url/reports`,
+        //   {
+        //     headers: {
+        //       Authorization: `Bearer ${token}`,
+        //     },
+        //   }
+        // );
         setReportData(response.data);
         setLoading(false);
       } catch (error) {
