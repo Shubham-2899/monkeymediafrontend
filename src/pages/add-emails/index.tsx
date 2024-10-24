@@ -6,8 +6,8 @@ import {
   CircularProgress,
   Box,
 } from "@mui/material";
-import axios from "axios";
 import * as yup from "yup";
+import { apiPost } from "../../utils/api";
 
 // Validation schema for emails
 const emailSchema = yup
@@ -35,17 +35,19 @@ const AddEmails: React.FC = () => {
       const emailsArray = emails.split(",").map((email) => email.trim());
       await emailSchema.validate(emailsArray);
 
-      const token = sessionStorage.getItem("authToken");
+      const response = await apiPost("/email_list/add-emails", {
+        emails: emailsArray,
+      });
       // API call to submit emails array
-      const response = await axios.post(
-        `${import.meta.env.VITE_APP_API_BASE_URL}/email_list/add-emails`,
-        { emails: emailsArray },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      // const response = await axios.post(
+      //   `${import.meta.env.VITE_APP_API_BASE_URL}/email_list/add-emails`,
+      //   { emails: emailsArray },
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${token}`,
+      //     },
+      //   }
+      // );
 
       if (response.status === 201) {
         setSuccess("Emails successfully added!");
@@ -82,20 +84,25 @@ const AddEmails: React.FC = () => {
     formData.append("file", file);
 
     setFileLoading(true); // Set file loading to true
-    const token = sessionStorage.getItem("authToken");
 
     try {
       // API call to upload CSV
-      const response = await axios.post(
-        `${import.meta.env.VITE_APP_API_BASE_URL}/email_list/upload-emails`,
+      const response = await apiPost(
+        "/email_list/upload-emails",
         formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        undefined,
+        { "Content-Type": "multipart/form-data" }
       );
+      // const response = await axios.post(
+      //   `${import.meta.env.VITE_APP_API_BASE_URL}/email_list/upload-emails`,
+      //   formData,
+      //   {
+      //     headers: {
+      //       "Content-Type": "multipart/form-data",
+      //       Authorization: `Bearer ${token}`,
+      //     },
+      //   }
+      // );
 
       if (response.status === 201) {
         setSuccess("CSV file uploaded successfully!");
