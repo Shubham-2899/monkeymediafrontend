@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -17,10 +17,18 @@ import {
   AlertTitle,
   Collapse,
   IconButton,
+  Select,
+  MenuItem,
+  SelectChangeEvent,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { validateEmails } from "../../heplers/UserDataValidation";
-import { apiPost } from "../../utils/api";
+import { apiGet, apiPost } from "../../utils/api";
+
+interface FormattedData {
+  label: string;
+  value: string;
+}
 
 const EmailForm: React.FC = () => {
   const [from, setFrom] = useState<string>("");
@@ -38,9 +46,39 @@ const EmailForm: React.FC = () => {
     severity: "success" as "success" | "error",
     message: "",
   });
-
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const [serverIps, setServerIps] = useState<FormattedData[]>([]);
+  const [selectedIp, setSelectedIp] = useState("");
+
+  useEffect(() => {
+    const getAvailableDomainIpDetails = async () => {
+      try {
+        // Type response to match the expected structure
+        const res = await apiGet("/availableIps");
+
+        const domainIp = res.data.domainIp as Record<string, string[]>;
+
+        // Format data into an array of { label, value } objects for easier selection
+        const formattedData: FormattedData[] = Object.entries(domainIp).flatMap(
+          ([key, ips]) =>
+            ips.map((ip: string) => ({
+              label: `${key} - ${ip}`, // What user sees
+              value: `${key} - ${ip}`,
+            }))
+        );
+
+        setServerIps(formattedData);
+        if (formattedData.length > 0) {
+          setSelectedIp(formattedData[0].value);
+        }
+      } catch (err: any) {
+        console.error("Error while fetching available IPs:", err.message);
+      }
+    };
+    getAvailableDomainIpDetails();
+  }, []);
 
   const handlePreview = () => {
     const newWindow = window.open();
@@ -83,26 +121,8 @@ const EmailForm: React.FC = () => {
         mode,
         offerId,
         campaignId,
+        selectedIp,
       });
-      // const response = await axios.post(
-      //   `${import.meta.env.VITE_APP_API_BASE_URL}/sendemail`,
-      //   {
-      //     from,
-      //     fromName,
-      //     subject,
-      //     to: toEmails,
-      //     templateType,
-      //     emailTemplate: encodedEmailTemplate,
-      //     mode,
-      //     offerId,
-      //     campaignId,
-      //   },
-      //   {
-      //     headers: {
-      //       Authorization: `Bearer ${token}`,
-      //     },
-      //   }
-      // );
       console.log(response.data);
 
       const message =
@@ -129,6 +149,10 @@ const EmailForm: React.FC = () => {
     }
   };
 
+  const handleChange = (event: SelectChangeEvent<string>) => {
+    setSelectedIp(event.target.value);
+  };
+
   return (
     <Box
       sx={{
@@ -149,13 +173,19 @@ const EmailForm: React.FC = () => {
               gap: "10px",
             }}
           >
-            <Typography variant="h6">Server IP's</Typography>
-            <TextareaAutosize
-              minRows={5}
-              placeholder="IP's available"
-              style={{ width: "100%", padding: "10px" }}
-              disabled
-            />
+            <Typography variant="h6">Select Server IP</Typography>
+            <Select
+              value={selectedIp || serverIps[0]?.value || ""}
+              onChange={handleChange}
+              displayEmpty
+              fullWidth
+            >
+              {serverIps.map((ip) => (
+                <MenuItem key={ip.value} value={ip.value}>
+                  {ip.label}
+                </MenuItem>
+              ))}
+            </Select>
           </Box>
         </Grid>
 
