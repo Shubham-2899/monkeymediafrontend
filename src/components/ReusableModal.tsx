@@ -1,8 +1,18 @@
-import React from "react";
 import { Box, Modal, Typography, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
+import { ReactNode } from "react";
 
-const ReusableModal = ({
+interface ReusableModalProps {
+  open: boolean;
+  handleClose: () => void;
+  title: string;
+  children: ReactNode;
+  actions: ReactNode;
+  icon?: ReactNode;
+  width?: string | number;
+  subTitle?: string | null;
+}
+const ReusableModal: React.FC<ReusableModalProps> = ({
   open,
   handleClose,
   title,
