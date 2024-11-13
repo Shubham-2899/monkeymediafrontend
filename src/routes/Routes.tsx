@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import CreateLink from "../pages/createLink";
 import EmailForm from "../pages/mailing";
 import Report from "../pages/report";
@@ -10,6 +10,7 @@ import AdminRoute from "./AdminRoute";
 import Users from "../pages/users";
 import AddEmails from "../pages/add-emails";
 import BullMQDashboard from "../pages/bullmq-dashboard";
+import Admin from "../pages/admin";
 
 const MonkeyMediaRoutes = () => {
   return (
@@ -20,7 +21,7 @@ const MonkeyMediaRoutes = () => {
 
       {/* Protected Routes for Authenticated Users */}
       <Route element={<ProtectedRoute />}>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Navigate to="/home" />} />
         <Route path="/home" element={<Home />} />
         <Route path="/report" element={<Report />} />
         <Route path="/create-link" element={<CreateLink />} />
@@ -29,6 +30,7 @@ const MonkeyMediaRoutes = () => {
 
       {/* Admin Routes - Only accessible by admins */}
       <Route element={<AdminRoute />}>
+        <Route path="/admin" element={<Admin />} />
         <Route path="/admin/users" element={<Users />} />
         <Route path="/admin/email-list" element={<AddEmails />} />
         <Route path="/admin/dashboard" element={<BullMQDashboard />} />

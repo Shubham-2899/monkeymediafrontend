@@ -40,7 +40,11 @@ function ResponsiveAppBar() {
       position="sticky"
       color="transparent"
       elevation={0}
-      sx={{ borderBottom: "1px solid #ddd", backgroundColor: "#fff" }}
+      sx={{
+        borderBottom: "1px solid #ddd",
+        backgroundColor: "#fff",
+        zIndex: 9999,
+      }}
     >
       <Toolbar disableGutters>
         <div style={{ flexGrow: 1 }}>
@@ -128,16 +132,15 @@ function ResponsiveAppBar() {
                   {/* Conditionally render Admin option for mobile view */}
                   {isAdmin && (
                     <Link
-                      to="/admin/users"
+                      to="/admin"
                       onClick={handleMenuItemClick}
                       style={{
                         paddingLeft: "10px",
                         textDecoration: "none",
                         color: "#777",
-                        backgroundColor:
-                          location.pathname === "/admin/users"
-                            ? "#00acef"
-                            : "transparent",
+                        backgroundColor: location.pathname?.includes("admin")
+                          ? "#00acef"
+                          : "transparent",
                       }}
                     >
                       <Typography
@@ -193,11 +196,12 @@ function ResponsiveAppBar() {
               {isAdmin && (
                 <Button
                   component={Link}
-                  to="/admin/users"
+                  to="/admin"
                   sx={{
                     my: 2,
-                    color:
-                      location.pathname === "/admin/users" ? "#00acef" : "#777",
+                    color: location.pathname?.includes("admin")
+                      ? "#00acef"
+                      : "#777",
                     display: "block",
                   }}
                   onClick={handleMenuItemClick}
