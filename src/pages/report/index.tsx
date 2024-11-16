@@ -167,7 +167,7 @@ const Report: React.FC = () => {
             {alert.message}
           </Alert>
         </Collapse>
-        {reportData.length === 0 ? (
+        {reportData.length === 0 && loading ? (
           <Box
             sx={{
               display: "flex",
