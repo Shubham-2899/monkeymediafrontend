@@ -37,106 +37,106 @@ const Report: React.FC = () => {
   ) => {
     setLoading(true);
     try {
-      const params = {
-        ...searchParams,
-        page: currentPage + 1,
-        pageSize: currentPageSize,
-      };
-      const response = await apiGet(`/reports`, params);
-      setReportData(response.data.reports);
-      setTotalElements(response.data.totalElements);
-      setLoading(false);
+      // const params = {
+      //   ...searchParams,
+      //   page: currentPage + 1,
+      //   pageSize: currentPageSize,
+      // };
+      // const response = await apiGet(`/reports`, params);
+      // setReportData(response.data.reports);
+      // setTotalElements(response.data.totalElements);
+      // setLoading(false);
       //API Mocking
-      // let filters = searchParams;
-      // setTimeout(() => {
-      //   let response = {
-      //     message: "Reports fetched successfully.",
-      //     success: true,
-      //     reports: [
-      //       {
-      //         offerId: "test 11",
-      //         campaignId: "test 11",
-      //         clickCount: 6,
-      //         totalEmailSent: 0,
-      //         date: "2024-11-16T03:28:46.638Z",
-      //       },
-      //       {
-      //         offerId: "Ajay01",
-      //         campaignId: "20844502",
-      //         clickCount: 1,
-      //         totalEmailSent: 0,
-      //         date: "2024-11-16T03:28:46.638Z",
-      //       },
-      //       {
-      //         offerId: "ajay123",
-      //         campaignId: "20844502",
-      //         clickCount: 175,
-      //         totalEmailSent: 0,
-      //         date: "2024-11-16T03:28:46.638Z",
-      //       },
-      //       {
-      //         offerId: "12344",
-      //         campaignId: "ajay11",
-      //         clickCount: 2,
-      //         totalEmailSent: 0,
-      //         date: "2024-11-16T03:28:46.638Z",
-      //       },
-      //       {
-      //         offerId: "rahul12",
-      //         campaignId: "20844502",
-      //         clickCount: 3,
-      //         totalEmailSent: 0,
-      //         date: "2024-11-16T03:28:46.638Z",
-      //       },
-      //       {
-      //         offerId: "Ajay30MyGov",
-      //         campaignId: "20844502",
-      //         clickCount: 9,
-      //         totalEmailSent: 113,
-      //         date: "2024-11-16T03:28:46.638Z",
-      //       },
-      //       {
-      //         offerId: "Ajay31",
-      //         campaignId: "20844502 ",
-      //         clickCount: 2,
-      //         totalEmailSent: 0,
-      //         date: "2024-11-16T03:28:46.638Z",
-      //       },
-      //       {
-      //         offerId: "rahul4nov",
-      //         campaignId: "20844502",
-      //         clickCount: 0,
-      //         totalEmailSent: 76,
-      //         date: "2024-11-16T03:28:46.638Z",
-      //       },
-      //       {
-      //         offerId: "rahul4nov",
-      //         campaignId: "20844502",
-      //         clickCount: 0,
-      //         totalEmailSent: 76,
-      //         date: "2024-11-16T03:28:46.638Z",
-      //       },
-      //       {
-      //         offerId: "rahul4nov",
-      //         campaignId: "20844502",
-      //         clickCount: 5,
-      //         totalEmailSent: 76,
-      //         date: "2024-11-16T03:28:46.638Z",
-      //       },
-      //     ].filter(
-      //       (report) =>
-      //         (!filters.offerId || report.offerId.includes(filters.offerId)) &&
-      //         (!filters.campaignId ||
-      //           report.campaignId.includes(filters.campaignId))
-      //     ),
-      //     page: "1",
-      //     pageSize: "10",
-      //     totalElements: 33,
-      //   };
-      //   setReportData(response.reports);
-      //   setTotalElements(response.totalElements);
-      //   setLoading(false);
-      // }, 2000);
+      let filters = searchParams;
+      setTimeout(() => {
+        let response = {
+          message: "Reports fetched successfully.",
+          success: true,
+          reports: [
+            {
+              offerId: "test 11",
+              campaignId: "test 11",
+              clickCount: 6,
+              totalEmailSent: 0,
+              date: "2024-11-16T03:28:46.638Z",
+            },
+            {
+              offerId: "Ajay01",
+              campaignId: "20844502",
+              clickCount: 1,
+              totalEmailSent: 0,
+              date: "2024-11-16T03:28:46.638Z",
+            },
+            {
+              offerId: "ajay123",
+              campaignId: "20844502",
+              clickCount: 175,
+              totalEmailSent: 0,
+              date: "2024-11-16T03:28:46.638Z",
+            },
+            {
+              offerId: "12344",
+              campaignId: "ajay11",
+              clickCount: 2,
+              totalEmailSent: 0,
+              date: "2024-11-16T03:28:46.638Z",
+            },
+            {
+              offerId: "rahul12",
+              campaignId: "20844502",
+              clickCount: 3,
+              totalEmailSent: 0,
+              date: "2024-11-16T03:28:46.638Z",
+            },
+            {
+              offerId: "Ajay30MyGov",
+              campaignId: "20844502",
+              clickCount: 9,
+              totalEmailSent: 113,
+              date: "2024-11-16T03:28:46.638Z",
+            },
+            {
+              offerId: "Ajay31",
+              campaignId: "20844502 ",
+              clickCount: 2,
+              totalEmailSent: 0,
+              date: "2024-11-16T03:28:46.638Z",
+            },
+            {
+              offerId: "rahul4nov",
+              campaignId: "20844502",
+              clickCount: 0,
+              totalEmailSent: 76,
+              date: "2024-11-16T03:28:46.638Z",
+            },
+            {
+              offerId: "rahul4nov",
+              campaignId: "20844502",
+              clickCount: 0,
+              totalEmailSent: 76,
+              date: "2024-11-16T03:28:46.638Z",
+            },
+            {
+              offerId: "rahul4nov",
+              campaignId: "20844502",
+              clickCount: 5,
+              totalEmailSent: 76,
+              date: "2024-11-16T03:28:46.638Z",
+            },
+          ].filter(
+            (report) =>
+              (!filters.offerId || report.offerId.includes(filters.offerId)) &&
+              (!filters.campaignId ||
+                report.campaignId.includes(filters.campaignId))
+          ),
+          page: "1",
+          pageSize: "10",
+          totalElements: 33,
+        };
+        setReportData(response.reports);
+        setTotalElements(response.totalElements);
+        setLoading(false);
+      }, 2000);
     } catch (error) {
       setAlert({
         open: true,
@@ -199,7 +199,7 @@ const Report: React.FC = () => {
             mb: 2,
             display: "flex",
             gap: 2,
-            // flexDirection: { xs: "column" },
+            flexDirection: { xs: "column", sm: "row" },
           }}
         >
           <TextField
@@ -223,12 +223,21 @@ const Report: React.FC = () => {
               }))
             }
           />
-          <Button variant="outlined" type="submit">
-            Search
-          </Button>
-          <Button variant="outlined" onClick={handleReset}>
-            Reset
-          </Button>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 2,
+              flexDirection: "row",
+              justifyContent: { xs: "center", sm: "flex-start" },
+            }}
+          >
+            <Button variant="outlined" type="submit">
+              Search
+            </Button>
+            <Button variant="outlined" onClick={handleReset}>
+              Reset
+            </Button>
+          </Box>
         </Box>
         <Collapse in={alert.open} sx={{ mt: 2 }}>
           <Alert
