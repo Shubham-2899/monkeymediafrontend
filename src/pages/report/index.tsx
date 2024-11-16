@@ -47,7 +47,7 @@ const Report: React.FC = () => {
       setReportData(response.data.reports);
       setTotalElements(response.data.totalElements);
       setLoading(false);
-    } catch (error
+    } catch (error) {
       setAlert({
         open: true,
         severity: "error",
