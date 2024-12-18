@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
@@ -10,12 +10,21 @@ import Button from "@mui/material/Button";
 import mms from "../assets/mms.jpeg";
 import { useAuth } from "../contexts/UserAuthContext";
 
+const shimmerStyle = {
+  background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+  backgroundSize: "200% 100%",
+  animation: "shimmer 1.5s infinite",
+  height: "40px",
+  width: "150px",
+  borderRadius: "5px",
+};
+
 const pages = ["Home", "Create link", "Mailing", "Report"];
 
 function ResponsiveAppBar() {
   const [openNav, setOpenNav] = React.useState(false);
   const location = useLocation();
-  const { login, logOut, setLogin, isAdmin } = useAuth();
+  const { login, logOut, setLogin, isAdmin, loading } = useAuth();
 
   const handleOpenNavMenu = (_event: React.MouseEvent<HTMLElement>) => {
     setOpenNav(!openNav);
@@ -60,7 +69,14 @@ function ResponsiveAppBar() {
             />
           </Link>
         </div>
-        {!!login ? (
+        {loading ? (
+          <Box sx={{ display: { xs: "none", md: "flex" }, gap: "10px" }}>
+            <div style={shimmerStyle}></div>
+            <div style={shimmerStyle}></div>
+            <div style={shimmerStyle}></div>
+            <div style={shimmerStyle}></div>
+          </Box>
+        ) : !!login ? (
           <>
             <Box
               sx={{
@@ -129,7 +145,6 @@ function ResponsiveAppBar() {
                       </Link>
                     );
                   })}
-                  {/* Conditionally render Admin option for mobile view */}
                   {isAdmin && (
                     <Link
                       to="/admin"
@@ -192,7 +207,6 @@ function ResponsiveAppBar() {
                   </Button>
                 );
               })}
-              {/* Conditionally render Admin option for desktop view */}
               {isAdmin && (
                 <Button
                   component={Link}

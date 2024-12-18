@@ -68,12 +68,16 @@ export function UserAuthContextProvider({ children }: AuthProviderProps) {
     const unsubscribe = onAuthStateChanged(auth, (currentuser) => {
       setUser(currentuser);
       setLoading(false);
+      /**
+       * sessionStorage.getItem("authToken")  is redundant as we can directly get the token from currentuser
+       * const token = await currentUser.getIdTokenResult();
+       * setIsAdmin(token.claims.admin || false);
+       */
       const token = sessionStorage.getItem("authToken");
       if (token) {
         setLogin(true);
         // Decode the JWT token
         const decodedToken: any = jwtDecodeFn(token);
-
         // Check if the token has the 'admin' claim
         if (decodedToken?.admin) {
           setIsAdmin(true);
