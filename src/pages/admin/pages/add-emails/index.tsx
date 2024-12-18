@@ -7,7 +7,7 @@ import {
   Box,
 } from "@mui/material";
 import * as yup from "yup";
-import { apiPost } from "../../utils/api";
+import { apiPost } from "../../../../utils/api";
 
 // Validation schema for emails
 const emailSchema = yup

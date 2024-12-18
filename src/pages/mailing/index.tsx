@@ -270,7 +270,7 @@ const EmailForm: React.FC = () => {
                   >
                     Preview
                   </Button>
-                  <Button variant="contained" color="warning" size="small">
+                  <Button variant="outlined" color="success" size="small">
                     Edit
                   </Button>
                 </div>

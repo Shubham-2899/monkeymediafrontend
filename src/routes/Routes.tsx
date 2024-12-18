@@ -7,8 +7,8 @@ import { ForgotPassword } from "../login/ForgotPassword";
 import Home from "../pages/home";
 import ProtectedRoute from "./ProtectedRoute";
 import AdminRoute from "./AdminRoute";
-import Users from "../pages/users";
-import AddEmails from "../pages/add-emails";
+import Users from "../pages/admin/pages/users/Users";
+// import AddEmails from "../pages/admin/pages/add-emails";
 import BullMQDashboard from "../pages/bullmq-dashboard";
 import Admin from "../pages/admin";
 
@@ -32,7 +32,7 @@ const MonkeyMediaRoutes = () => {
       <Route element={<AdminRoute />}>
         <Route path="/admin" element={<Admin />} />
         <Route path="/admin/users" element={<Users />} />
-        <Route path="/admin/email-list" element={<AddEmails />} />
+        {/* <Route path="/admin/email-list" element={<AddEmails />} /> */}
         <Route path="/admin/dashboard" element={<BullMQDashboard />} />
         {/* Add other admin routes here */}
       </Route>

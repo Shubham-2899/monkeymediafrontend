@@ -190,7 +190,7 @@ const Report: React.FC = () => {
             loading={loading || reportData.length === 0}
             rowCount={totalElements}
             pagination
-            pageSizeOptions={[20, 50, 100]}
+            pageSizeOptions={[10, 25, 50, 100]}
             paginationMode="server"
             paginationModel={paginationModel}
             onPaginationModelChange={(newModel) => setPaginationModel(newModel)}
