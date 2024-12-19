@@ -26,7 +26,7 @@ const ReusableModal: React.FC<ReusableModalProps> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   return (
-    <Modal open={open} onClose={handleClose}>
+    <Modal open={open} onClose={handleClose} sx={{ zIndex: "99999" }}>
       <Box
         sx={{
           position: "absolute",
