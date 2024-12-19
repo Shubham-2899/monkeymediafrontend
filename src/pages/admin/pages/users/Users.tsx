@@ -1,20 +1,9 @@
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-} from "@mui/material";
+import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { useEffect, useState } from "react";
 import { apiGet } from "../../../../utils/api";
 import ReusableModal from "../../../../components/ReusableModal";
+import ServerDataTable from "./ServerDataTable";
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -136,50 +125,7 @@ const Users = () => {
       >
         <Box>
           {selectedServerData.length > 0 ? (
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell rowSpan={2}>Host</TableCell>
-                    <TableCell rowSpan={2}>Provider</TableCell>
-                    <TableCell rowSpan={2}>Status</TableCell>
-                    <TableCell colSpan={3} align="center">
-                      Available IPs
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>IP Address</TableCell>
-                    <TableCell>Type</TableCell>
-                    <TableCell>Went Spam</TableCell>
-                  </TableRow>
-                </TableHead>
-
-                <TableBody>
-                  {selectedServerData.map((server: any, index: number) => (
-                    <TableRow key={index}>
-                      <TableCell>{server.host}</TableCell>
-                      <TableCell>{server.provider}</TableCell>
-                      <TableCell>{server.status}</TableCell>
-                      <TableCell colSpan={3}>
-                        {server?.availableIps?.map(
-                          (ip: any, ipIndex: number) => (
-                            <TableRow key={ipIndex}>
-                              <TableCell align="left">{ip.ip}</TableCell>
-                              <TableCell>
-                                {ip.isMainIp ? "Main IP" : "Secondary IP"}
-                              </TableCell>
-                              <TableCell align="center">
-                                {ip.wentSpam ? "Yes" : "No"}
-                              </TableCell>
-                            </TableRow>
-                          )
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+            <ServerDataTable serverData={selectedServerData} />
           ) : (
             <Typography>No server details available.</Typography>
           )}
