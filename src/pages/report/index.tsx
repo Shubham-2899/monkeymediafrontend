@@ -83,7 +83,14 @@ const Report: React.FC = () => {
       field: "date",
       headerName: "Date",
       flex: 1,
-      valueGetter: (params) => new Date(params).toLocaleString(),
+      valueGetter: (value, _row) =>
+        value
+          ? new Date(value).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })
+          : "N/A",
     },
     { field: "offerId", headerName: "Offer ID", flex: 1, maxWidth: 250 },
     { field: "campaignId", headerName: "Campaign ID", flex: 1, maxWidth: 250 },
@@ -93,6 +100,19 @@ const Report: React.FC = () => {
       headerName: "Total Emails Sent",
       flex: 1,
       maxWidth: 250,
+    },
+    {
+      field: "openRate",
+      headerName: "Open Rate (%)",
+      flex: 1,
+      maxWidth: 250,
+      valueGetter: (value, row) => {
+        const openRate = Number(value || 0);
+        const totalEmailSent = Number(row?.totalEmailSent || 0);
+        return totalEmailSent > 0
+          ? ((openRate / totalEmailSent) * 100).toFixed(2)
+          : "0.00";
+      },
     },
   ];
 

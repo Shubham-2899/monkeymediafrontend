@@ -103,6 +103,7 @@ const Users = () => {
             getRowId={(row: any) => row._id}
             rowCount={totalElements}
             disableRowSelectionOnClick
+            disableColumnSelector
             // paginations
             pageSizeOptions={[10, 25, 50, 100]}
             paginationMode="server"
