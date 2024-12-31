@@ -19,6 +19,7 @@ import {
 } from "@mui/material";
 import "./CreateLink.css";
 import CloseIcon from "@mui/icons-material/Close";
+import { encrypt } from "../../utils/crypto";
 
 interface CreateLinkProps {}
 
@@ -91,6 +92,41 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
     }
   };
 
+  const handleOpenTrackLinkCreation = () => {
+    if (!domain || !offerId || !campaignId) {
+      setAlert({
+        open: true,
+        severity: "error",
+        message: "Please fill all required fields.",
+      });
+      return;
+    }
+    setLoading(true);
+
+    try {
+      const param = `campaignId=${campaignId}&offerId=${offerId}`;
+      const urlEncodedParam = encrypt(param);
+      setGeneratedLink(`${domain}/content/${urlEncodedParam}`);
+      console.log(
+        `Generated Open track Link: ${domain}/content/${urlEncodedParam}`
+      );
+      setAlert({
+        open: true,
+        severity: "success",
+        message: "Link Generated Successfully!",
+      });
+    } catch (error) {
+      console.error("Error creating open track link:", error);
+      setAlert({
+        open: true,
+        severity: "error",
+        message: "Failed to generate the link. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCopyToClipboard = () => {
     if (generatedLink) {
       navigator.clipboard.writeText(generatedLink).then(
@@ -115,7 +151,11 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
       <form
         onSubmit={(e: any) => {
           e.preventDefault();
-          handleAddOffer();
+          if (linkType === "Open Track link") {
+            handleOpenTrackLinkCreation();
+          } else {
+            handleAddOffer();
+          }
         }}
       >
         <Typography variant="h6" gutterBottom sx={{ textAlign: "center" }}>
@@ -140,6 +180,21 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
           </Alert>
         </Collapse>
         <Grid container spacing={3}>
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth>
+              <FormLabel>Link Type</FormLabel>
+              <Select
+                value={linkType}
+                onChange={(e) => setLinkType(e.target.value)}
+                fullWidth
+                size="small"
+              >
+                <MenuItem value="Subscribe link">Subscribe</MenuItem>
+                <MenuItem value="Unsubscribe link">Unsubscribe</MenuItem>
+                <MenuItem value="Open Track link">Open Track</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth required>
               <FormLabel>Domain</FormLabel>
@@ -179,20 +234,6 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
               />
             </FormControl>
           </Grid>
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth>
-              <FormLabel>Link Type</FormLabel>
-              <Select
-                value={linkType}
-                onChange={(e) => setLinkType(e.target.value)}
-                fullWidth
-                size="small"
-              >
-                <MenuItem value="Subscribe link">Subscribe link</MenuItem>
-                <MenuItem value="Unsubscribe link">Unsubscribe link</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
           <Grid item xs={12}>
             <FormControl fullWidth required>
               <FormLabel>Link Pattern</FormLabel>
@@ -203,6 +244,7 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
                 onChange={(e) => setLinkPattern(e.target.value)}
                 placeholder="/abc123/xyz456"
                 fullWidth
+                disabled={linkType === "Open Track link"}
               />
             </FormControl>
           </Grid>
@@ -217,6 +259,7 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
                 placeholder="https://www.exampleform.com/sdvdf?sub1=offerid"
                 fullWidth
                 multiline
+                disabled={linkType === "Open Track link"}
               />
             </FormControl>
           </Grid>
