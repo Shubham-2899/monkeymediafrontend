@@ -45,7 +45,7 @@ export const validateUsername = (username: string) => {
 };
 
 export const validateEmail = (email: string) => {
-  const regex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(.\w{2,3})+$/;
+  const regex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*\.\w{2,}$/;
   if (!regex.test(email)) {
     return "This is not a valid email format!";
   }

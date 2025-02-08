@@ -22,7 +22,10 @@ import {
   SelectChangeEvent,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { validateEmails } from "../../heplers/UserDataValidation";
+import {
+  validateEmail,
+  validateEmails,
+} from "../../heplers/UserDataValidation";
 import { apiGet, apiPost } from "../../utils/api";
 
 interface FormattedData {
@@ -103,6 +106,16 @@ const EmailForm: React.FC = () => {
         open: true,
         severity: "error",
         message: "Please fill in all fields before sending.",
+      });
+      return;
+    }
+
+    //from.split("@")[1] != selectedIp.split("-")[0].trim()
+    if (validateEmail(from)) {
+      setAlert({
+        open: true,
+        severity: "error",
+        message: "Please enter valid from email address",
       });
       return;
     }
