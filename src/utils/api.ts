@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
+import { getIdToken } from "../../firebase";
 
 interface ApiParams {
   [key: string]: any;
@@ -19,9 +20,22 @@ const createApiInstance = (customBaseUrl?: string): AxiosInstance => {
 
 const handleApiError = (error: AxiosError, url: string): void => {
   if (error.response) {
-    if (error.response.status === 401 || error.response.status === 403) {
+    console.error(`Error with ${url}:`, error.response.data);
+    if (error.response.status === 401) {
       sessionStorage.clear();
       window.location.href = `/signin`;
+    } else if (error.response.status === 403) {
+      console.log("Refreshing token...");
+      try {
+        // we are refreshing the token here as the token is expried
+        getIdToken(true);
+        // Retry the original API request with the new token
+        // return await originalRequest();
+      } catch (tokenError) {
+        console.error("Error refreshing token:", tokenError);
+        sessionStorage.clear();
+        window.location.href = `/signin`;
+      }
     } else {
       console.error(`Error with ${url}:`, error.response.data);
     }
