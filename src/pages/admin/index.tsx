@@ -12,6 +12,7 @@ import MailIcon from "@mui/icons-material/Mail";
 import Users from "./pages/users/Users";
 import AddEmails from "./pages/add-emails";
 import BullMQDashboard from "../bullmq-dashboard";
+import Suppression from "./pages/suppression";
 
 const drawerWidth = 240;
 
@@ -20,6 +21,7 @@ const componentMap = {
   Users: <Users />,
   "Add Email List": <AddEmails />,
   "View Queue": <BullMQDashboard />,
+  Suppression: <Suppression />,
 };
 
 type ComponentKey = keyof typeof componentMap; // "Users" | "Add Emails" | "View Queue"
