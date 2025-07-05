@@ -22,14 +22,25 @@ const Report: React.FC = () => {
     pageSize: 10,
   });
   const [totalElements, setTotalElements] = useState<number>(0);
-  const [searchParams, setSearchParams] = useState({
-    offerId: "",
-    campaignId: "",
-  });
+
   const [alert, setAlert] = useState({
     open: false,
     severity: "success" as "success" | "error",
     message: "",
+  });
+
+  const [filters, setFilters] = useState({
+    offerId: "",
+    campaignId: "",
+    fromDate: "",
+    toDate: "",
+  });
+
+  const [appliedFilters, setAppliedFilters] = useState({
+    offerId: "",
+    campaignId: "",
+    fromDate: "",
+    toDate: "",
   });
 
   const fetchReportData = async (
@@ -38,44 +49,41 @@ const Report: React.FC = () => {
   ) => {
     setLoading(true);
     try {
-      const params = {
-        ...searchParams,
+      const params: any = {
+        ...appliedFilters,
         page: currentPage + 1,
         pageSize: currentPageSize,
       };
+
       const response = await apiGet(`/reports`, params);
       setReportData(response.data.reports);
       setTotalElements(response.data.totalElements);
-      setLoading(false);
     } catch (error) {
       setAlert({
         open: true,
         severity: "error",
         message: "Failed to fetch report data. Please try again.",
       });
+    } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchReportData(paginationModel.page, paginationModel.pageSize);
-  }, [paginationModel]);
+  }, [paginationModel, appliedFilters]);
 
   const handleSearch = (event: React.FormEvent) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget as HTMLFormElement);
-    const offerId = formData.get("offerId") as string;
-    const campaignId = formData.get("campaignId") as string;
-    if (!offerId && !campaignId) {
-      return;
-    }
-    setSearchParams({ offerId, campaignId });
-    setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
+    setAppliedFilters(filters);
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
   };
 
   const handleReset = () => {
-    setSearchParams({ offerId: "", campaignId: "" });
-    setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
+    const reset = { offerId: "", campaignId: "", fromDate: "", toDate: "" };
+    setFilters(reset);
+    setAppliedFilters(reset);
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
   };
 
   const columns: GridColDef[] = [
@@ -116,6 +124,32 @@ const Report: React.FC = () => {
     },
   ];
 
+  const totalClickCount = reportData.reduce(
+    (sum, item) => sum + (item.clickCount || 0),
+    0
+  );
+  const totalEmailSent = reportData.reduce(
+    (sum, item) => sum + (item.totalEmailSent || 0),
+    0
+  );
+
+  const rowsWithTotal = [
+    ...reportData.map((report, index) => ({
+      id: index + paginationModel.page * paginationModel.pageSize,
+      ...report,
+    })),
+    {
+      id: "totals-row",
+      date: "",
+      offerId: "",
+      campaignId: "TOTAL",
+      clickCount: totalClickCount,
+      totalEmailSent: totalEmailSent,
+      openRate: "", // Optional
+      isSummary: true, // For custom styling
+    },
+  ];
+
   return (
     <Box>
       <Box sx={{ mt: "20px", width: "100%" }}>
@@ -136,21 +170,18 @@ const Report: React.FC = () => {
             label="Offer ID"
             name="offerId"
             size="small"
-            value={searchParams.offerId}
+            value={filters.offerId}
             onChange={(e) =>
-              setSearchParams((prev) => ({ ...prev, offerId: e.target.value }))
+              setFilters((prev) => ({ ...prev, offerId: e.target.value }))
             }
           />
           <TextField
             label="Campaign ID"
             name="campaignId"
             size="small"
-            value={searchParams.campaignId}
+            value={filters.campaignId}
             onChange={(e) =>
-              setSearchParams((prev) => ({
-                ...prev,
-                campaignId: e.target.value,
-              }))
+              setFilters((prev) => ({ ...prev, campaignId: e.target.value }))
             }
           />
           <Box
@@ -161,6 +192,34 @@ const Report: React.FC = () => {
               justifyContent: { xs: "center", sm: "flex-start" },
             }}
           >
+            <TextField
+              label="From Date"
+              type="date"
+              size="small"
+              name="fromDate"
+              InputLabelProps={{ shrink: true }}
+              value={filters.fromDate}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  fromDate: e.target.value,
+                }))
+              }
+            />
+            <TextField
+              label="To Date"
+              type="date"
+              size="small"
+              name="toDate"
+              InputLabelProps={{ shrink: true }}
+              value={filters.toDate}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  toDate: e.target.value,
+                }))
+              }
+            />
             <Button variant="outlined" type="submit">
               Search
             </Button>
@@ -200,10 +259,10 @@ const Report: React.FC = () => {
           </Box>
         ) : (
           <DataGrid
-            rows={reportData.map((report, index) => ({
-              id: index + paginationModel.page * paginationModel.pageSize,
-              ...report,
-            }))}
+            rows={rowsWithTotal}
+            getRowClassName={(params) =>
+              params.row.isSummary ? "summary-row" : ""
+            }
             columns={columns}
             disableColumnFilter
             disableColumnMenu
