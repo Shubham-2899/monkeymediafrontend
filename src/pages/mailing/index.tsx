@@ -20,13 +20,16 @@ import {
   Select,
   MenuItem,
   SelectChangeEvent,
+  Tooltip,
 } from "@mui/material";
+
 import CloseIcon from "@mui/icons-material/Close";
 import {
   validateEmail,
   validateEmails,
 } from "../../heplers/UserDataValidation";
 import { apiGet, apiPost } from "../../utils/api";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
 interface FormattedData {
   label: string;
@@ -36,6 +39,8 @@ interface FormattedData {
 const EmailForm: React.FC = () => {
   const [from, setFrom] = useState<string>("");
   const [fromName, setFromName] = useState<string>("");
+  const [delay, setDelay] = useState<number>(5);
+  const [batchSize, setBatchSize] = useState<number>(5);
   const [subject, setSubject] = useState<string>("");
   const [to, setTo] = useState<string>("");
   const [templateType, setTemplateType] = useState<string>("html");
@@ -54,8 +59,14 @@ const EmailForm: React.FC = () => {
 
   const [serverIps, setServerIps] = useState<FormattedData[]>([]);
   const [selectedIp, setSelectedIp] = useState("");
+  const [campaignStarted, setCampaignStarted] = useState(false);
+  const [campaignPaused, setCampaignPaused] = useState(false);
 
   useEffect(() => {
+    // const savedJobId = localStorage.getItem("activeCampaignJobId");
+    // if (savedJobId) {
+    //   setCampaignStarted(true);
+    // }
     const getAvailableDomainIpDetails = async () => {
       try {
         // Type response to match the expected structure
@@ -76,8 +87,12 @@ const EmailForm: React.FC = () => {
         if (formattedData.length > 0) {
           setSelectedIp(formattedData[0].value);
         }
-      } catch (err: any) {
-        console.error("Error while fetching available IPs:", err.message);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          console.error("Error while fetching available IPs:", err.message);
+        } else {
+          console.error("Error while fetching available IPs:", err);
+        }
       }
     };
     getAvailableDomainIpDetails();
@@ -142,6 +157,7 @@ const EmailForm: React.FC = () => {
         mode === "test"
           ? `${response?.data?.emailSent} Emails sent successfully!`
           : `Emails added to sending job ${response?.data?.jobId}`;
+
       // Set success alert
       setAlert({
         open: true,
@@ -156,6 +172,56 @@ const EmailForm: React.FC = () => {
         open: true,
         severity: "error",
         message: "Failed to send emails. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStartCampaign = async () => {
+    if (
+      !from ||
+      !fromName ||
+      !subject ||
+      !to ||
+      !emailTemplate ||
+      !offerId ||
+      !campaignId ||
+      !batchSize ||
+      !delay
+    ) {
+      setAlert({
+        open: true,
+        severity: "error",
+        message: "Please fill in all fields before starting the campaign.",
+      });
+      return;
+    }
+
+    const toEmails = validateEmails(to);
+    setLoading(true);
+
+    try {
+      // const encodedEmailTemplate = encodeURIComponent(emailTemplate);
+      // const response = await apiPost("/start-campagin", {});
+
+      // if (response?.data?.jobId) {
+      // localStorage.setItem("activeCampaignJobId", response.data.jobId);
+      localStorage.setItem("activeCampaignJobId", "2");
+      setCampaignStarted(true);
+      setCampaignPaused(false);
+      // }
+
+      setAlert({
+        open: true,
+        severity: "success",
+        message: `Campaign started with Job ID `,
+      });
+    } catch (err) {
+      setAlert({
+        open: true,
+        severity: "error",
+        message: "Failed to start campaign.",
       });
     } finally {
       setLoading(false);
@@ -246,6 +312,7 @@ const EmailForm: React.FC = () => {
                 sx={{ width: "100%" }}
                 size="small"
               />
+
               <TextareaAutosize
                 minRows={5}
                 value={to}
@@ -318,13 +385,102 @@ const EmailForm: React.FC = () => {
               required
               size="small"
             />
-            <TextField
-              label="Campaign/Affiliate Offer Id"
-              value={campaignId}
-              onChange={(e) => setCampaignId(e.target.value)}
-              placeholder="Enter Campaign/Affiliate Offer Id"
-              size="small"
-            />
+            <Box
+              display="flex"
+              alignItems="center"
+              gap={1}
+              sx={{ position: "relative" }}
+            >
+              <TextField
+                label="Campaign/Affiliate Offer Id"
+                value={campaignId}
+                onChange={(e) => setCampaignId(e.target.value)}
+                placeholder="Enter Campaign/Affiliate Offer Id"
+                size="small"
+                fullWidth
+              />
+              <Tooltip title="Please carefully select the Campaign" arrow>
+                <IconButton
+                  size="small"
+                  sx={{
+                    position: "absolute",
+                    right: 1,
+                    top: 0,
+                  }}
+                >
+                  <InfoOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+            <Box
+              display="flex"
+              flexWrap="wrap"
+              justifyContent="space-between"
+              gap={2}
+              sx={{ width: "100%" }}
+            >
+              <Box
+                display="flex"
+                alignItems="center"
+                gap={1}
+                sx={{
+                  position: "relative",
+                  width: !isMobile ? "48%" : "100%",
+                }}
+              >
+                <TextField
+                  label="Delay (in seconds)"
+                  value={delay}
+                  onChange={(e) => setDelay(Number(e.target.value))}
+                  placeholder="Enter delay in seconds"
+                  sx={{ width: "100%" }}
+                  size="small"
+                />
+                <Tooltip title="Please carefully Insert Delay" arrow>
+                  <IconButton
+                    size="small"
+                    sx={{
+                      position: "absolute",
+                      right: 1,
+                      top: 0,
+                    }}
+                  >
+                    <InfoOutlinedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+              <Box
+                display="flex"
+                alignItems="center"
+                gap={1}
+                sx={{
+                  position: "relative",
+                  width: !isMobile ? "48%" : "100%",
+                }}
+              >
+                <TextField
+                  label="Batch Size"
+                  value={batchSize}
+                  onChange={(e) => setBatchSize(Number(e.target.value))}
+                  placeholder="Enter batch size"
+                  sx={{ width: isMobile ? "48%" : "100%" }}
+                  size="small"
+                  required
+                />
+                <Tooltip title="Please carefully insert batch size" arrow>
+                  <IconButton
+                    size="small"
+                    sx={{
+                      position: "absolute",
+                      right: 1,
+                      top: 0,
+                    }}
+                  >
+                    <InfoOutlinedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            </Box>
             <Button
               variant={mode === "test" ? "contained" : "outlined"}
               color="success"
@@ -363,15 +519,77 @@ const EmailForm: React.FC = () => {
           {alert.message}
         </Alert>
       </Collapse>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleSend}
-        sx={{ mt: "20px", width: "200px" }}
-        disabled={loading}
-      >
-        {loading ? <CircularProgress size={24} color="inherit" /> : "SEND"}
-      </Button>
+      {!campaignStarted ? (
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={mode === "bulk" ? handleStartCampaign : handleSend}
+          sx={{ mt: "20px", width: "200px" }}
+          disabled={loading}
+        >
+          {loading ? (
+            <CircularProgress size={24} color="inherit" />
+          ) : mode === "bulk" ? (
+            "Start Campaign"
+          ) : (
+            "Send Test Email"
+          )}
+        </Button>
+      ) : (
+        <Box sx={{ mt: 2, display: "flex", gap: 2 }}>
+          {!campaignPaused ? (
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={async () => {
+                if (!campaignId) return;
+                try {
+                  // await apiPost("/campaign/stop", { jobId });
+                  setCampaignPaused(true);
+                  setAlert({
+                    open: true,
+                    severity: "success",
+                    message: "Campaign paused.",
+                  });
+                } catch {
+                  setAlert({
+                    open: true,
+                    severity: "error",
+                    message: "Failed to pause campaign.",
+                  });
+                }
+              }}
+            >
+              Stop Campaign
+            </Button>
+          ) : (
+            <Button
+              variant="contained"
+              color="success"
+              onClick={async () => {
+                if (!campaignId) return;
+                try {
+                  // await apiPost("/campaign/start", { campaignId });
+                  setCampaignPaused(false);
+                  setAlert({
+                    open: true,
+                    severity: "success",
+                    message: "Campaign resumed.",
+                  });
+                } catch {
+                  setAlert({
+                    open: true,
+                    severity: "error",
+                    message: "Failed to resume campaign.",
+                  });
+                }
+              }}
+            >
+              Resume Campaign
+            </Button>
+          )}
+        </Box>
+      )}
     </Box>
   );
 };

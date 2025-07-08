@@ -21,10 +21,10 @@ const createApiInstance = (customBaseUrl?: string): AxiosInstance => {
 const handleApiError = (error: AxiosError, url: string): void => {
   if (error.response) {
     console.error(`Error with ${url}:`, error.response.data);
-    if (error.response.status === 401) {
+    if (error.response.status === 403) {
       sessionStorage.clear();
       window.location.href = `/signin`;
-    } else if (error.response.status === 403) {
+    } else if (error.response.status === 401) {
       console.log("Refreshing token...");
       try {
         // we are refreshing the token here as the token is expried
