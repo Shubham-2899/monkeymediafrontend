@@ -21,6 +21,7 @@ const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB in bytes
 const AddEmails: React.FC = () => {
   const [emails, setEmails] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
+  const [campaignId, setCampaignId] = useState<string>("");
   const [emailLoading, setEmailLoading] = useState<boolean>(false);
   const [fileLoading, setFileLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>("");
@@ -38,23 +39,14 @@ const AddEmails: React.FC = () => {
       const response = await apiPost("/email_list/add-emails", {
         emails: emailsArray,
       });
-      // API call to submit emails array
-      // const response = await axios.post(
-      //   `${import.meta.env.VITE_APP_API_BASE_URL}/email_list/add-emails`,
-      //   { emails: emailsArray },
-      //   {
-      //     headers: {
-      //       Authorization: `Bearer ${token}`,
-      //     },
-      //   }
-      // );
 
       if (response.status === 201) {
         setSuccess("Emails successfully added!");
         setEmails(""); // Clear the emails input
       }
-    } catch (err: any) {
-      setError(err.message || "Invalid email format");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Invalid email format";
+      setError(errorMessage);
     } finally {
       setEmailLoading(false); // Reset email loading
     }
@@ -82,6 +74,10 @@ const AddEmails: React.FC = () => {
 
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("campaignId", campaignId);
+
+    console.log("🚀 ~ handleFileSubmit ~ campaignId:", campaignId);
+    console.log("🚀 ~ handleFileSubmit ~ file:", file);
 
     setFileLoading(true); // Set file loading to true
 
@@ -93,24 +89,16 @@ const AddEmails: React.FC = () => {
         undefined,
         { "Content-Type": "multipart/form-data" }
       );
-      // const response = await axios.post(
-      //   `${import.meta.env.VITE_APP_API_BASE_URL}/email_list/upload-emails`,
-      //   formData,
-      //   {
-      //     headers: {
-      //       "Content-Type": "multipart/form-data",
-      //       Authorization: `Bearer ${token}`,
-      //     },
-      //   }
-      // );
-
       if (response.status === 201) {
         setSuccess("CSV file uploaded successfully!");
         setFile(null); // Clear the file input
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.log("🚀 ~ handleFileSubmit ~ err:", err);
-      setError(`Error: ${err.response.data.message}`);
+      const errorMessage = err instanceof Error && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data
+        ? `Error: ${err.response.data.message}`
+        : "Failed to upload CSV file";
+      setError(errorMessage);
     } finally {
       setFileLoading(false); // Reset file loading
     }
@@ -142,18 +130,28 @@ const AddEmails: React.FC = () => {
       </Button>
 
       {/* File upload input */}
-      <Box mt={4}>
+      <Box mt={4} component={"form"}>
         <Typography variant="h6">Upload CSV</Typography>
         <input
           type="file"
           accept=".csv"
           onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
         />
+        <TextField
+          label="Enter campaign ID"
+          variant="outlined"
+          value={campaignId}
+          onChange={(e) => setCampaignId(e.target.value)}
+          // margin="normal"
+          sx={{ mt: 2, mr: 2, width: "200px" }}
+          size="small"
+          required
+        />
         <Button
           variant="contained"
           color="secondary"
           onClick={handleFileSubmit}
-          disabled={fileLoading || !file} // Disable button when loading or no file selected
+          disabled={fileLoading || !file || !campaignId}
           sx={{ mt: 2 }}
         >
           {fileLoading ? <CircularProgress size={24} /> : "Upload CSV"}
