@@ -9,10 +9,16 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import InboxIcon from "@mui/icons-material/MoveToInbox";
 import MailIcon from "@mui/icons-material/Mail";
+import CampaignIcon from "@mui/icons-material/Campaign";
+import AnalyticsIcon from "@mui/icons-material/Analytics";
+import PeopleIcon from "@mui/icons-material/People";
+import QueueIcon from "@mui/icons-material/Queue";
+import BlockIcon from "@mui/icons-material/Block";
 import Users from "./pages/users/Users";
 import AddEmails from "./pages/add-emails";
 import BullMQDashboard from "../bullmq-dashboard";
 import Suppression from "./pages/suppression";
+import EmailAnalytics from "../../components/EmailAnalytics";
 
 const drawerWidth = 240;
 
@@ -22,9 +28,30 @@ const componentMap = {
   "Add Email List": <AddEmails />,
   "View Queue": <BullMQDashboard />,
   Suppression: <Suppression />,
+  // Campaigns: <CampaignsPage />,
+  Analytics: <EmailAnalytics />,
 };
 
-type ComponentKey = keyof typeof componentMap; // "Users" | "Add Emails" | "View Queue"
+type ComponentKey = keyof typeof componentMap;
+
+const getIcon = (componentName: string) => {
+  switch (componentName) {
+    case "Users":
+      return <PeopleIcon />;
+    case "Add Email List":
+      return <MailIcon />;
+    case "View Queue":
+      return <QueueIcon />;
+    case "Suppression":
+      return <BlockIcon />;
+    case "Campaigns":
+      return <CampaignIcon />;
+    case "Analytics":
+      return <AnalyticsIcon />;
+    default:
+      return <InboxIcon />;
+  }
+};
 
 export default function Admin() {
   const [selectedComponent, setSelectedComponent] =
@@ -47,14 +74,14 @@ export default function Admin() {
         <Box sx={{ overflow: "auto" }}>
           <List>
             {(Object.keys(componentMap) as ComponentKey[]).map(
-              (text, index) => (
+              (text) => (
                 <ListItem key={text} disablePadding>
                   <ListItemButton
                     selected={selectedComponent === text}
                     onClick={() => setSelectedComponent(text)}
                   >
                     <ListItemIcon>
-                      {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+                      {getIcon(text)}
                     </ListItemIcon>
                     <ListItemText primary={text} />
                   </ListItemButton>

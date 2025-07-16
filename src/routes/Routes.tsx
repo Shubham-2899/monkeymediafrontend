@@ -11,6 +11,8 @@ import Users from "../pages/admin/pages/users/Users";
 // import AddEmails from "../pages/admin/pages/add-emails";
 import BullMQDashboard from "../pages/bullmq-dashboard";
 import Admin from "../pages/admin";
+// import CampaignsPage from "../pages/campaigns";
+import EmailAnalytics from "../components/EmailAnalytics";
 
 const MonkeyMediaRoutes = () => {
   return (
@@ -26,6 +28,7 @@ const MonkeyMediaRoutes = () => {
         <Route path="/report" element={<Report />} />
         <Route path="/create-link" element={<CreateLink />} />
         <Route path="/mailing" element={<EmailForm />} />
+        <Route path="/analytics" element={<EmailAnalytics />} />
       </Route>
 
       {/* Admin Routes - Only accessible by admins */}
@@ -34,6 +37,8 @@ const MonkeyMediaRoutes = () => {
         <Route path="/admin/users" element={<Users />} />
         {/* <Route path="/admin/email-list" element={<AddEmails />} /> */}
         <Route path="/admin/dashboard" element={<BullMQDashboard />} />
+        {/* <Route path="/admin/campaigns" element={<CampaignsPage />} /> */}
+        <Route path="/admin/analytics" element={<EmailAnalytics />} />
         {/* Add other admin routes here */}
       </Route>
 

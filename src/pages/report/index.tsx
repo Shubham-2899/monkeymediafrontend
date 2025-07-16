@@ -246,16 +246,28 @@ const Report: React.FC = () => {
             {alert.message}
           </Alert>
         </Collapse>
-        {reportData.length === 0 && loading ? (
+        {loading ? (
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              height: "100%",
+              height: "200px",
             }}
           >
             <CircularProgress />
+          </Box>
+        ) : reportData.length === 0 ? (
+          <Box
+            sx={{
+              textAlign: "center",
+              padding: "20px",
+              color: "text.secondary",
+            }}
+          >
+            <Typography variant="body1">
+              No reports found for the selected filters.
+            </Typography>
           </Box>
         ) : (
           <DataGrid

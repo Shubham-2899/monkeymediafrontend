@@ -89,3 +89,22 @@ export const apiPost = async (
     handleApiError(error as AxiosError, url);
   }
 };
+
+export const apiPut = async (
+  url: string,
+  data: any,
+  customBaseUrl?: string,
+  additionalHeaders: ApiHeaders = {}
+): Promise<any> => {
+  const api = createApiInstance(customBaseUrl);
+  const headers = { ...getAuthHeaders(), ...additionalHeaders };
+
+  try {
+    const response = await api.put(url, data, {
+      headers,
+    });
+    return response;
+  } catch (error) {
+    handleApiError(error as AxiosError, url);
+  }
+};

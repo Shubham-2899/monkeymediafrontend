@@ -19,14 +19,14 @@ const shimmerStyle = {
   borderRadius: "5px",
 };
 
-const pages = ["Home", "Create link", "Mailing", "Report"];
+const pages = ["Home", "Create link", "Mailing", "Analytics", "Report"];
 
 function ResponsiveAppBar() {
   const [openNav, setOpenNav] = React.useState(false);
   const location = useLocation();
   const { login, logOut, setLogin, isAdmin, loading } = useAuth();
 
-  const handleOpenNavMenu = (_event: React.MouseEvent<HTMLElement>) => {
+  const handleOpenNavMenu = () => {
     setOpenNav(!openNav);
   };
 
@@ -41,6 +41,23 @@ function ResponsiveAppBar() {
       setLogin(false);
     } catch (error) {
       console.log(error);
+    }
+  };
+
+  const getPagePath = (page: string) => {
+    switch (page) {
+      case "Home":
+        return "/home";
+      case "Create link":
+        return "/create-link";
+      case "Mailing":
+        return "/mailing";
+      case "Analytics":
+        return "/analytics";
+      case "Report":
+        return "/report";
+      default:
+        return `/${page.toLowerCase().replace(" ", "-")}`;
     }
   };
 
@@ -76,7 +93,7 @@ function ResponsiveAppBar() {
             <div style={shimmerStyle}></div>
             <div style={shimmerStyle}></div>
           </Box>
-        ) : !!login ? (
+        ) : login ? (
           <>
             <Box
               sx={{
@@ -120,7 +137,7 @@ function ResponsiveAppBar() {
                   }}
                 >
                   {pages.map((page) => {
-                    const to = `/${page.toLowerCase().replace(" ", "-")}`;
+                    const to = getPagePath(page);
                     return (
                       <Link
                         key={page}
@@ -188,7 +205,7 @@ function ResponsiveAppBar() {
               }}
             >
               {pages.map((page) => {
-                const to = `/${page.toLowerCase().replace(" ", "-")}`;
+                const to = getPagePath(page);
                 return (
                   <Button
                     key={page}
