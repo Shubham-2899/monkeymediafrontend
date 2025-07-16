@@ -57,6 +57,8 @@ export interface ServerError {
   reason: string;
 }
 
+export type Mode = 'test' | 'bulk' | 'manual';
+
 // Email Campaign Interfaces
 export interface CreateCampaignDto {
   campaignId: string;
@@ -68,7 +70,7 @@ export interface CreateCampaignDto {
   offerId: string;
   selectedIp: string;
   to: string[];
-  mode: 'test' | 'bulk';
+  mode: Mode;
   batchSize?: number;
   delay?: number;
 }

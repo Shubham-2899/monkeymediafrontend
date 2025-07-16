@@ -18,7 +18,6 @@ import Users from "./pages/users/Users";
 import AddEmails from "./pages/add-emails";
 import BullMQDashboard from "../bullmq-dashboard";
 import Suppression from "./pages/suppression";
-import CampaignsPage from "../campaigns";
 import EmailAnalytics from "../../components/EmailAnalytics";
 
 const drawerWidth = 240;
@@ -29,7 +28,7 @@ const componentMap = {
   "Add Email List": <AddEmails />,
   "View Queue": <BullMQDashboard />,
   Suppression: <Suppression />,
-  Campaigns: <CampaignsPage />,
+  // Campaigns: <CampaignsPage />,
   Analytics: <EmailAnalytics />,
 };
 

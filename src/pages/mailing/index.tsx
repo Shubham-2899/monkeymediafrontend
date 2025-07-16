@@ -36,6 +36,8 @@ import {
 } from "../../heplers/UserDataValidation";
 import { CampaignService } from "../../utils/campaignService";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import { useLocation } from "react-router-dom";
+import { Mode } from "../../Interfaces";
 
 interface FormattedData {
   label: string;
@@ -45,13 +47,13 @@ interface FormattedData {
 const EmailForm: React.FC = () => {
   const [from, setFrom] = useState<string>("");
   const [fromName, setFromName] = useState<string>("");
-  const [delay, setDelay] = useState<number>(5);
+  const [delay, setDelay] = useState<number>(10);
   const [batchSize, setBatchSize] = useState<number>(5);
   const [subject, setSubject] = useState<string>("");
   const [to, setTo] = useState<string>("");
   const [templateType, setTemplateType] = useState<string>("html");
   const [emailTemplate, setEmailTemplate] = useState<string>("");
-  const [mode, setMode] = useState<string>("test");
+  const [mode, setMode] = useState<Mode>("test");
   const [loading, setLoading] = useState<boolean>(false);
   const [offerId, setOfferId] = useState<string>("");
   const [campaignId, setCampaignId] = useState<string>("");
@@ -62,7 +64,7 @@ const EmailForm: React.FC = () => {
   });
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
+  const location = useLocation();
   const [serverIps, setServerIps] = useState<FormattedData[]>([]);
   const [selectedIp, setSelectedIp] = useState("");
   const [campaignStarted, setCampaignStarted] = useState(false);
@@ -81,6 +83,34 @@ const EmailForm: React.FC = () => {
   useEffect(() => {
     getAvailableDomainIpDetails();
   }, []);
+
+  useEffect(() => {
+    // Pre-populate from localStorage if coming from analytics
+    const params = new URLSearchParams(location.search);
+    if (params.get("fromAnalytics")) {
+      const stored = localStorage.getItem("prepopulateMailingCampaign");
+      if (stored) {
+        try {
+          const data = JSON.parse(stored);
+          setFrom(data.from || "");
+          setFromName(data.fromName || "");
+          setSubject(data.subject || "");
+          setEmailTemplate(decodeURIComponent(data.emailTemplate || ""));
+          setTemplateType(data.templateType || "html");
+          setOfferId(data.offerId || "");
+          setSelectedIp(data.selectedIp || "");
+          setCampaignId(data.campaignId || "");
+          setBatchSize(data.batchSize || 5);
+          setDelay(data.delay || 5);
+          setMode("bulk");
+          // setCampaignStatus(data.status || null); // No longer needed
+        } catch (e) {
+          // fallback: clear
+          // setCampaignStatus(null); // No longer needed
+        }
+      }
+    }
+  }, [location.search]);
 
   const getAvailableDomainIpDetails = async () => {
     try {
@@ -117,7 +147,6 @@ const EmailForm: React.FC = () => {
   };
 
   const validateForm = () => {
-    console.log("here ");
     if (
       !from ||
       !fromName ||
@@ -144,7 +173,7 @@ const EmailForm: React.FC = () => {
     }
 
     const toEmails = validateEmails(to);
-    if (mode === "test" && toEmails.length === 0) {
+    if ((mode === "test" || mode === "manual") && toEmails.length === 0) {
       setAlert({
         open: true,
         severity: "error",
@@ -172,7 +201,7 @@ const EmailForm: React.FC = () => {
         to: toEmails,
         templateType: templateType as "html" | "plain",
         emailTemplate: encodedEmailTemplate,
-        mode: "test" as const,
+        mode: mode,
         offerId,
         selectedIp,
         batchSize,
@@ -181,17 +210,31 @@ const EmailForm: React.FC = () => {
 
       const response = await CampaignService.createCampaign(campaignData);
 
-      const message =
-        mode === "test"
-          ? `${response.emailSent} Emails sent successfully!${
-              response.emailFailed ? ` ${response.emailFailed} failed.` : ""
-            }`
-          : `Campaign started with Job ID: ${response.jobId}`;
+      // const message =
+      //   mode === "test"
+      //     ? `${response.emailSent} Emails sent successfully!${
+      //         response.emailFailed ? `\n${response.emailFailed} failed.` : ""
+      //       }`
+      //     : `Emails were successfully added to the sending job (Job ID: ${response?.jobId}) in the email queue.`;
 
+      const message =
+        mode === "test" ? (
+          <>
+            <div>{response?.emailSent} Emails sent successfully!</div>
+            {response?.emailFailed && response?.emailFailed > 0 && (
+              <div>{response.emailFailed} failed.</div>
+            )}
+          </>
+        ) : (
+          <div>
+            Emails were successfully added to the sending job (Job ID:{" "}
+            {response?.jobId}) in the email queue.
+          </div>
+        );
       setAlert({
         open: true,
         severity: "success",
-        message: message,
+        message: message as unknown as string,
       });
 
       if (mode === "bulk" && response.jobId) {
@@ -243,15 +286,15 @@ const EmailForm: React.FC = () => {
         setAlert({
           open: true,
           severity: "success",
-          message: `Campaign started successfully! Job ID: ${response.jobId}`,
+          message: `Campaign started successfully! Job ID: ${response.jobId} in the campaign queue.`,
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error starting campaign:", error);
       setAlert({
         open: true,
         severity: "error",
-        message: "Failed to start campaign. Please try again.",
+        message: error.response.data.message ?? 'Failed to start the campaign. Please try again.',
       });
     } finally {
       setLoading(false);
@@ -358,10 +401,10 @@ const EmailForm: React.FC = () => {
   };
 
   const handleModeChange = (newMode: string) => {
-    setMode(newMode);
+    setMode(newMode as Mode);
 
-    // If switching to test mode and we have a last bulk campaign, clear the campaign state
-    if (newMode === "test" && lastBulkCampaignId) {
+    // If switching to test/manual mode and we have a last bulk campaign, clear the campaign state
+    if ((newMode === "test" || newMode === "manual") && lastBulkCampaignId) {
       setCampaignStarted(false);
       setCampaignPaused(false);
       setCurrentJobId("");
@@ -642,9 +685,21 @@ const EmailForm: React.FC = () => {
                         sx={{ display: "flex", alignItems: "center", gap: 1 }}
                       >
                         <Chip label="Test" size="small" color="primary" />
-                        <Typography variant="body2">
+                        {/* <Typography variant="body2">
                           Send test emails
-                        </Typography>
+                        </Typography> */}
+                      </Box>
+                    }
+                  />
+                  <FormControlLabel
+                    value="manual"
+                    control={<Radio />}
+                    label={
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <Chip label="Manual" size="small" color="info" />
+                        {/* <Typography variant="body2">Manual send</Typography> */}
                       </Box>
                     }
                   />
@@ -656,7 +711,7 @@ const EmailForm: React.FC = () => {
                         sx={{ display: "flex", alignItems: "center", gap: 1 }}
                       >
                         <Chip label="Bulk" size="small" color="secondary" />
-                        <Typography variant="body2">Bulk campaign</Typography>
+                        {/* <Typography variant="body2">Bulk campaign</Typography> */}
                       </Box>
                     }
                   />
@@ -664,10 +719,10 @@ const EmailForm: React.FC = () => {
               </FormControl>
 
               {/* Mode switching info */}
-              {campaignStarted && mode === "test" && (
+              {campaignStarted && (mode === "test" || mode === "manual") && (
                 <Alert severity="info" sx={{ mt: 1 }}>
                   <Typography variant="body2">
-                    Switched to test mode. You can test deliverability while
+                    Switched to {mode} mode. You can test deliverability while
                     your bulk campaign is paused.
                   </Typography>
                 </Alert>
@@ -765,8 +820,8 @@ const EmailForm: React.FC = () => {
 
       {/* Action Buttons */}
       <Box sx={{ mt: 3, display: "flex", gap: 2, flexWrap: "wrap" }}>
-        {mode === "test" ? (
-          // Test mode buttons
+        {mode === "test" || mode === "manual" ? (
+          // Test/manual mode buttons
           <>
             <Button
               variant="contained"
@@ -776,11 +831,12 @@ const EmailForm: React.FC = () => {
             >
               {loading ? (
                 <CircularProgress size={24} color="inherit" />
+              ) : mode === "manual" ? (
+                "Send Manual Email"
               ) : (
                 "Send Test Email"
               )}
             </Button>
-
             {/* Show campaign control buttons if campaign is running/paused */}
             {campaignStarted && (
               <Box sx={{ display: "flex", gap: 2 }}>
@@ -847,7 +903,6 @@ const EmailForm: React.FC = () => {
                     "Start Campaign"
                   )}
                 </Button>
-
                 {/* Show resume button if we have a paused campaign */}
                 {campaignPaused && lastBulkCampaignId && (
                   <Button
