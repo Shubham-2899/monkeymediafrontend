@@ -11,13 +11,15 @@ import {
   Typography,
   Alert,
   CircularProgress,
+  Paper,
+  Stack,
 } from "@mui/material";
 // import Loading from '../../components/Loading';
 import "./signup-signin-styles.css";
 import { useUserAuth } from "../contexts/UserAuthContext";
 
 const Signin = () => {
-  const [error, setError] = useState<any>("");
+  const [error, setError] = useState<unknown>("");
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const navigate = useNavigate();
@@ -37,14 +39,16 @@ const Signin = () => {
       // if (userData) sessionStorage.setItem("user", userData);
       setLogin(true);
       navigate("/home");
-    } catch (err) {
-      setError(err);
+    } catch (err: any) {
+      console.log("🚀 ~ handleSubmit ~ err:", err);
+
+      setError(err.message);
     }
     setLoading(false);
   }
 
   useEffect(() => {
-    let authToken = sessionStorage.getItem("authToken");
+    const authToken = sessionStorage.getItem("authToken");
     if (authToken) {
       navigate("/home");
     }
@@ -53,25 +57,50 @@ const Signin = () => {
 
   return (
     <>
-      {loading ? (
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          height="100vh"
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#f4f6fa",
+          position: "relative",
+        }}
+      >
+        <Paper
+          elevation={2}
+          sx={{
+            p: { xs: 2, sm: 4 },
+            borderRadius: 3,
+            minWidth: 340,
+            maxWidth: 400,
+            width: "100%",
+            position: "relative",
+          }}
         >
-          <CircularProgress />
-        </Box>
-      ) : (
-        <Box className="signin">
-          <Avatar sx={{ m: 1, bgcolor: "secondary.main" }}>
-            <LockOutlinedIcon />
-          </Avatar>
-          <Typography component="h1" variant="h5">
-            Sign in
-          </Typography>
-          {error && <Alert severity="error">{error.toString()}</Alert>}
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+          <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+            <Avatar sx={{ bgcolor: "secondary.main", width: 48, height: 48 }}>
+              <LockOutlinedIcon fontSize="large" />
+            </Avatar>
+            <Box>
+              <Typography variant="h5" fontWeight={600} color="#333">
+                Sign In
+              </Typography>
+              <Typography variant="body2" sx={{ color: "#666" }}>
+                Access your application
+              </Typography>
+            </Box>
+          </Stack>
+          {typeof error === "string" && error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            sx={{ mt: 1, position: "relative" }}
+          >
             <TextField
               margin="normal"
               required
@@ -82,6 +111,8 @@ const Signin = () => {
               autoComplete="email"
               autoFocus
               onChange={(e) => setEmail(e.target.value)}
+              sx={{ mb: 2 }}
+              disabled={loading}
             />
             <TextField
               margin="normal"
@@ -93,31 +124,61 @@ const Signin = () => {
               id="password"
               autoComplete="current-password"
               onChange={(e) => setPassword(e.target.value)}
+              sx={{ mb: 2 }}
+              disabled={loading}
             />
             <Button
               type="submit"
               fullWidth
               variant="contained"
-              className="formBtn"
+              sx={{
+                borderRadius: 2,
+                py: 1.2,
+                fontWeight: 600,
+                fontSize: 16,
+                mb: 1,
+              }}
               disabled={loading}
             >
               Sign In
             </Button>
             <Grid container>
               <Grid item xs>
-                <Link to="/forgot-password" className="links">
+                <Link
+                  to="/forgot-password"
+                  className="links"
+                  style={{
+                    textDecoration: "none",
+                    color: "#1976d2",
+                    fontWeight: 500,
+                  }}
+                >
                   Forgot password?
                 </Link>
               </Grid>
-              {/* <Grid item xs>
-                <Link to="/signup" className="links">
-                  {"Create New Account? Sign Up"}
-                </Link>
-              </Grid> */}
             </Grid>
+            {loading && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  bgcolor: "rgba(255,255,255,0.7)",
+                  zIndex: 10,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 3,
+                }}
+              >
+                <CircularProgress />
+              </Box>
+            )}
           </Box>
-        </Box>
-      )}
+        </Paper>
+      </Box>
     </>
   );
 };

@@ -204,6 +204,7 @@ const AddEmails: React.FC = () => {
                 margin="normal"
                 InputProps={{ sx: { borderRadius: 2, background: "#f5f6fa" } }}
                 aria-label="Enter emails"
+                autoFocus={true}
               />
               <Button
                 variant="contained"
