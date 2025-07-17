@@ -7,7 +7,7 @@ import { UserAuthContextProvider } from "./contexts/UserAuthContext";
 function App() {
   return (
     <>
-      <Box sx={{ margin: "0px 10px 0px 10px" }}>
+      <Box sx={{ margin: "0px" }}>
         <UserAuthContextProvider>
           <ResponsiveAppBar />
           <MonkeyMediaRoutes />

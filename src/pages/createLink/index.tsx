@@ -6,12 +6,9 @@ import {
   Button,
   Select,
   MenuItem,
-  FormControl,
   Grid,
   Box,
-  TextareaAutosize,
   CircularProgress,
-  Paper,
   Collapse,
   Alert,
   IconButton,
@@ -20,6 +17,9 @@ import {
 import "./CreateLink.css";
 import CloseIcon from "@mui/icons-material/Close";
 import { encrypt } from "../../utils/crypto";
+import LinkIcon from "@mui/icons-material/Link";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import CheckIcon from "@mui/icons-material/Check";
 
 interface CreateLinkProps {}
 
@@ -141,27 +141,54 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
 
   return (
     <Box
-      component={Paper}
       sx={{
-        maxWidth: "650px",
-        margin: "auto",
-        padding: 3,
+        width: "100%",
+        maxWidth: 700,
+        mx: "auto",
+        mt: 4,
+        px: { xs: 1, sm: 2 },
+        boxSizing: "border-box",
       }}
     >
-      <form
-        onSubmit={(e: any) => {
-          e.preventDefault();
-          if (linkType === "Open Track link") {
-            handleOpenTrackLinkCreation();
-          } else {
-            handleAddOffer();
-          }
+      {/* Header */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          mb: 3,
+          gap: 2,
         }}
       >
-        <Typography variant="h6" gutterBottom sx={{ textAlign: "center" }}>
-          Create Offer Link
-        </Typography>
-        <Collapse in={alert.open} sx={{ mt: 2 }}>
+        <LinkIcon sx={{ fontSize: 36, color: "#1976d2" }} />
+        <Box>
+          <Typography
+            variant="h5"
+            fontWeight={700}
+            color="#222"
+            textAlign="center"
+          >
+            Create Offer Link
+          </Typography>
+          <Typography
+            variant="body1"
+            sx={{ color: "#666", textAlign: "center", fontWeight: 400 }}
+          >
+            Generate tracking and redirect links for your campaigns
+          </Typography>
+        </Box>
+      </Box>
+
+      <Box
+        sx={{
+          background: "#fff",
+          borderRadius: 3,
+          p: { xs: 2, sm: 4 },
+          boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+          mb: 4,
+        }}
+      >
+        <Collapse in={alert.open} sx={{ mb: 3 }}>
           <Alert
             severity={alert.severity}
             action={
@@ -174,160 +201,293 @@ const CreateLink: React.FC<CreateLinkProps> = () => {
                 <CloseIcon fontSize="inherit" />
               </IconButton>
             }
-            sx={{ mb: 2 }}
           >
             {alert.message}
           </Alert>
         </Collapse>
-        <Grid container spacing={3}>
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth>
-              <FormLabel>Link Type</FormLabel>
-              <Select
-                value={linkType}
-                onChange={(e) => setLinkType(e.target.value)}
-                fullWidth
-                size="small"
-              >
-                <MenuItem value="Subscribe link">Subscribe</MenuItem>
-                <MenuItem value="Unsubscribe link">Unsubscribe</MenuItem>
-                <MenuItem value="Open Track link">Open Track</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth required>
-              <FormLabel>Domain</FormLabel>
-              <TextField
-                required
-                size="small"
-                value={domain}
-                onChange={(e) => setDomain(e.target.value)}
-                placeholder="https://healthcare.info"
-                fullWidth
-              />
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth required>
-              <FormLabel>Campaign ID</FormLabel>
-              <TextField
-                required
-                size="small"
-                value={campaignId}
-                onChange={(e) => setCampaignId(e.target.value)}
-                placeholder="Affiliate Campaign ID"
-                fullWidth
-              />
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth required>
-              <FormLabel>Offer ID</FormLabel>
-              <TextField
-                required
-                size="small"
-                value={offerId}
-                onChange={(e) => setOfferId(e.target.value)}
-                placeholder="Enter Offer ID"
-                fullWidth
-              />
-            </FormControl>
-          </Grid>
-          <Grid item xs={12}>
-            <FormControl fullWidth required>
-              <FormLabel>Link Pattern</FormLabel>
-              <TextField
-                required
-                size="small"
-                value={linkPattern}
-                onChange={(e) => setLinkPattern(e.target.value)}
-                placeholder="/abc123/xyz456"
-                fullWidth
-                disabled={linkType === "Open Track link"}
-              />
-            </FormControl>
-          </Grid>
-          <Grid item xs={12}>
-            <FormControl fullWidth required>
-              <FormLabel>Redirect Link</FormLabel>
-              <TextField
-                required
-                size="small"
-                value={redirectLink}
-                onChange={(e) => setRedirectLink(e.target.value)}
-                placeholder="https://www.exampleform.com/sdvdf?sub1=offerid"
-                fullWidth
-                multiline
-                disabled={linkType === "Open Track link"}
-              />
-            </FormControl>
-          </Grid>
-        </Grid>
-        <Box mt={3} display="flex" justifyContent="center">
-          <Button
-            variant="contained"
-            color="primary"
-            // onClick={handleAddOffer}
-            disabled={loading}
-            type="submit"
-            sx={{ width: "50%", padding: 1 }}
-          >
-            {loading ? (
-              <CircularProgress size={24} color="inherit" />
-            ) : (
-              "Generate Link"
-            )}
-          </Button>
-        </Box>
-      </form>
-      {generatedLink && (
-        <Box
-          mt={3}
-          sx={{
-            backgroundColor: "#fff",
-            padding: 2,
-            borderRadius: 1,
+
+        <form
+          onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
+            e.preventDefault();
+            if (linkType === "Open Track link") {
+              handleOpenTrackLinkCreation();
+            } else {
+              handleAddOffer();
+            }
           }}
         >
-          <Box component="span" sx={{ display: "flex" }}>
-            <Typography variant="subtitle1" fontWeight="bold">
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6}>
+              <Box>
+                <FormLabel
+                  sx={{
+                    fontWeight: 600,
+                    color: "#333",
+                    mb: 1,
+                    display: "block",
+                  }}
+                >
+                  Link Type
+                </FormLabel>
+                <Select
+                  value={linkType}
+                  onChange={(e) => setLinkType(e.target.value)}
+                  fullWidth
+                  size="small"
+                  sx={{
+                    background: "#f8f9fa",
+                    borderRadius: 2,
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "#e0e0e0",
+                    },
+                  }}
+                >
+                  <MenuItem value="Subscribe link">Subscribe</MenuItem>
+                  <MenuItem value="Unsubscribe link">Unsubscribe</MenuItem>
+                  <MenuItem value="Open Track link">Open Track</MenuItem>
+                </Select>
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Box>
+                <FormLabel
+                  sx={{
+                    fontWeight: 600,
+                    color: "#333",
+                    mb: 1,
+                    display: "block",
+                  }}
+                >
+                  Domain *
+                </FormLabel>
+                <TextField
+                  required
+                  size="small"
+                  value={domain}
+                  onChange={(e) => setDomain(e.target.value)}
+                  placeholder="https://healthcare.info"
+                  fullWidth
+                  sx={{
+                    background: "#f8f9fa",
+                    borderRadius: 2,
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": {
+                        borderColor: "#e0e0e0",
+                      },
+                    },
+                  }}
+                />
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Box>
+                <FormLabel
+                  sx={{
+                    fontWeight: 600,
+                    color: "#333",
+                    mb: 1,
+                    display: "block",
+                  }}
+                >
+                  Campaign ID *
+                </FormLabel>
+                <TextField
+                  required
+                  size="small"
+                  value={campaignId}
+                  onChange={(e) => setCampaignId(e.target.value)}
+                  placeholder="Affiliate Campaign ID"
+                  fullWidth
+                  sx={{
+                    background: "#f8f9fa",
+                    borderRadius: 2,
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": {
+                        borderColor: "#e0e0e0",
+                      },
+                    },
+                  }}
+                />
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Box>
+                <FormLabel
+                  sx={{
+                    fontWeight: 600,
+                    color: "#333",
+                    mb: 1,
+                    display: "block",
+                  }}
+                >
+                  Offer ID *
+                </FormLabel>
+                <TextField
+                  required
+                  size="small"
+                  value={offerId}
+                  onChange={(e) => setOfferId(e.target.value)}
+                  placeholder="Enter Offer ID"
+                  fullWidth
+                  sx={{
+                    background: "#f8f9fa",
+                    borderRadius: 2,
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": {
+                        borderColor: "#e0e0e0",
+                      },
+                    },
+                  }}
+                />
+              </Box>
+            </Grid>
+            <Grid item xs={12}>
+              <Box>
+                <FormLabel
+                  sx={{
+                    fontWeight: 600,
+                    color: "#333",
+                    mb: 1,
+                    display: "block",
+                  }}
+                >
+                  Link Pattern *
+                </FormLabel>
+                <TextField
+                  required
+                  size="small"
+                  value={linkPattern}
+                  onChange={(e) => setLinkPattern(e.target.value)}
+                  placeholder="/abc123/xyz456"
+                  fullWidth
+                  disabled={linkType === "Open Track link"}
+                  sx={{
+                    background: "#f8f9fa",
+                    borderRadius: 2,
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": {
+                        borderColor: "#e0e0e0",
+                      },
+                    },
+                    "& .Mui-disabled": {
+                      background: "#f5f5f5",
+                    },
+                  }}
+                />
+              </Box>
+            </Grid>
+            <Grid item xs={12}>
+              <Box>
+                <FormLabel
+                  sx={{
+                    fontWeight: 600,
+                    color: "#333",
+                    mb: 1,
+                    display: "block",
+                  }}
+                >
+                  Redirect Link *
+                </FormLabel>
+                <TextField
+                  required
+                  size="small"
+                  value={redirectLink}
+                  onChange={(e) => setRedirectLink(e.target.value)}
+                  placeholder="https://example.com/redirect"
+                  fullWidth
+                  disabled={linkType === "Open Track link"}
+                  sx={{
+                    background: "#f8f9fa",
+                    borderRadius: 2,
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": {
+                        borderColor: "#e0e0e0",
+                      },
+                    },
+                    "& .Mui-disabled": {
+                      background: "#f5f5f5",
+                    },
+                  }}
+                />
+              </Box>
+            </Grid>
+            <Grid item xs={12}>
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  disabled={loading}
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: "none",
+                    px: 4,
+                    py: 1.5,
+                    fontSize: "1rem",
+                    fontWeight: 600,
+                    boxShadow: "0 2px 4px rgba(25, 118, 210, 0.08)",
+                    "&:hover": {
+                      boxShadow: "0 4px 8px rgba(25, 118, 210, 0.12)",
+                    },
+                  }}
+                >
+                  {loading ? (
+                    <CircularProgress size={24} color="inherit" />
+                  ) : (
+                    "Generate Link"
+                  )}
+                </Button>
+              </Box>
+            </Grid>
+          </Grid>
+        </form>
+
+        {/* Generated Link Display */}
+        {generatedLink && (
+          <Box
+            sx={{
+              mt: 4,
+              background: "#f8f9fa",
+              borderRadius: 2,
+              p: 3,
+              border: "1px solid #e0e0e0",
+            }}
+          >
+            <Typography variant="h6" fontWeight={600} color="#333" gutterBottom>
               Generated Link
             </Typography>
-            {copied && (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <Typography
-                variant="subtitle1"
-                color="success.main"
-                sx={{ ml: 1 }}
+                variant="body2"
+                sx={{
+                  flex: 1,
+                  fontFamily: "monospace",
+                  background: "white",
+                  p: 2,
+                  borderRadius: 1,
+                  border: "1px solid #e0e0e0",
+                  wordBreak: "break-all",
+                }}
               >
-                Copied!
+                {generatedLink}
               </Typography>
-            )}
+              <Button
+                variant="outlined"
+                onClick={handleCopyToClipboard}
+                startIcon={copied ? <CheckIcon /> : <ContentCopyIcon />}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: "none",
+                  minWidth: 100,
+                }}
+                color={copied ? "success" : "primary"}
+              >
+                {copied ? "Copied!" : "Copy"}
+              </Button>
+            </Box>
           </Box>
-          <TextareaAutosize
-            minRows={3}
-            value={generatedLink}
-            readOnly
-            style={{
-              width: "100%",
-              padding: 8,
-              fontFamily: "monospace",
-              backgroundColor: "#f5f5f5",
-            }}
-          />
-          <Box mt={1}>
-            <Button
-              variant="outlined"
-              color="success"
-              onClick={handleCopyToClipboard}
-              fullWidth
-              sx={{ width: "40%" }}
-            >
-              Copy Link
-            </Button>
-          </Box>
-        </Box>
-      )}
+        )}
+      </Box>
     </Box>
   );
 };

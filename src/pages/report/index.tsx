@@ -151,7 +151,7 @@ const Report: React.FC = () => {
   ];
 
   return (
-    <Box>
+    <Box sx={{mx: "10px"}}>
       <Box sx={{ mt: "20px", width: "100%" }}>
         <Typography variant="h5" gutterBottom sx={{ mb: 2 }}>
           Report
