@@ -8,11 +8,13 @@ import {
   Collapse,
   IconButton,
   CircularProgress,
+  Stack,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { apiGet } from "../../utils/api";
 import { IReport } from "../../utils/interface";
 import CloseIcon from "@mui/icons-material/Close";
+import AssessmentIcon from "@mui/icons-material/Assessment";
 
 const Report: React.FC = () => {
   const [reportData, setReportData] = useState<IReport[]>([]);
@@ -49,7 +51,7 @@ const Report: React.FC = () => {
   ) => {
     setLoading(true);
     try {
-      const params: any = {
+      const params: Record<string, string | number> = {
         ...appliedFilters,
         page: currentPage + 1,
         pageSize: currentPageSize,
@@ -91,7 +93,7 @@ const Report: React.FC = () => {
       field: "date",
       headerName: "Date",
       flex: 1,
-      valueGetter: (value, _row) =>
+      valueGetter: (value) =>
         value
           ? new Date(value).toLocaleDateString("en-US", {
               year: "numeric",
@@ -151,19 +153,45 @@ const Report: React.FC = () => {
   ];
 
   return (
-    <Box sx={{mx: "10px"}}>
-      <Box sx={{ mt: "20px", width: "100%" }}>
-        <Typography variant="h5" gutterBottom sx={{ mb: 2 }}>
-          Report
-        </Typography>
+    <Box sx={{ p: { xs: 1, sm: 3 } }}>
+      {/* Header */}
+      <Box
+        sx={{
+          // p: 3,
+          pb: 3,
+          background: "#fff",
+          color: "#333",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          borderBottom: "1px solid #e0e0e0",
+          width: "100%",
+          gap: 2,
+          flexDirection: { xs: "column", sm: "row" },
+        }}
+      >
+        <Stack direction="row" spacing={2} alignItems="center">
+          <AssessmentIcon sx={{ fontSize: 32, color: "#1976d2" }} />
+          <Box>
+            <Typography variant="h5" fontWeight={600} color="#333">
+              Report
+            </Typography>
+            <Typography variant="body2" sx={{ color: "#666" }}>
+              View and filter campaign performance reports
+            </Typography>
+          </Box>
+        </Stack>
         <Box
           component={"form"}
           onSubmit={handleSearch}
           sx={{
-            mb: 2,
             display: "flex",
             gap: 2,
             flexDirection: { xs: "column", sm: "row" },
+            alignItems: "center",
+            background: { xs: "none", sm: "#f8f9fa" },
+            p: { xs: 0, sm: 2 },
+            borderRadius: 2,
           }}
         >
           <TextField
@@ -174,6 +202,7 @@ const Report: React.FC = () => {
             onChange={(e) =>
               setFilters((prev) => ({ ...prev, offerId: e.target.value }))
             }
+            sx={{ minWidth: 120 }}
           />
           <TextField
             label="Campaign ID"
@@ -183,69 +212,73 @@ const Report: React.FC = () => {
             onChange={(e) =>
               setFilters((prev) => ({ ...prev, campaignId: e.target.value }))
             }
+            sx={{ minWidth: 120 }}
           />
-          <Box
-            sx={{
-              display: "flex",
-              gap: 2,
-              flexDirection: "row",
-              justifyContent: { xs: "center", sm: "flex-start" },
-            }}
-          >
-            <TextField
-              label="From Date"
-              type="date"
-              size="small"
-              name="fromDate"
-              InputLabelProps={{ shrink: true }}
-              value={filters.fromDate}
-              onChange={(e) =>
-                setFilters((prev) => ({
-                  ...prev,
-                  fromDate: e.target.value,
-                }))
-              }
-            />
-            <TextField
-              label="To Date"
-              type="date"
-              size="small"
-              name="toDate"
-              InputLabelProps={{ shrink: true }}
-              value={filters.toDate}
-              onChange={(e) =>
-                setFilters((prev) => ({
-                  ...prev,
-                  toDate: e.target.value,
-                }))
-              }
-            />
-            <Button variant="outlined" type="submit">
-              Search
-            </Button>
-            <Button variant="outlined" onClick={handleReset}>
-              Reset
-            </Button>
-          </Box>
-        </Box>
-        <Collapse in={alert.open} sx={{ mt: 2 }}>
-          <Alert
-            severity={alert.severity}
-            action={
-              <IconButton
-                aria-label="close"
-                color="inherit"
-                size="small"
-                onClick={() => setAlert({ ...alert, open: false })}
-              >
-                <CloseIcon fontSize="inherit" />
-              </IconButton>
+          <TextField
+            label="From Date"
+            type="date"
+            size="small"
+            name="fromDate"
+            InputLabelProps={{ shrink: true }}
+            value={filters.fromDate}
+            onChange={(e) =>
+              setFilters((prev) => ({
+                ...prev,
+                fromDate: e.target.value,
+              }))
             }
-            sx={{ mb: 2 }}
+            sx={{ minWidth: 140 }}
+          />
+          <TextField
+            label="To Date"
+            type="date"
+            size="small"
+            name="toDate"
+            InputLabelProps={{ shrink: true }}
+            value={filters.toDate}
+            onChange={(e) =>
+              setFilters((prev) => ({
+                ...prev,
+                toDate: e.target.value,
+              }))
+            }
+            sx={{ minWidth: 140 }}
+          />
+          <Button
+            variant="contained"
+            type="submit"
+            sx={{ borderRadius: 2, textTransform: "none", minWidth: 90 }}
           >
-            {alert.message}
-          </Alert>
-        </Collapse>
+            Search
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={handleReset}
+            sx={{ borderRadius: 2, textTransform: "none", minWidth: 90 }}
+          >
+            Reset
+          </Button>
+        </Box>
+      </Box>
+      <Collapse in={alert.open} sx={{ mt: 2, mx: 3 }}>
+        <Alert
+          severity={alert.severity}
+          action={
+            <IconButton
+              aria-label="close"
+              color="inherit"
+              size="small"
+              onClick={() => setAlert({ ...alert, open: false })}
+            >
+              <CloseIcon fontSize="inherit" />
+            </IconButton>
+          }
+          sx={{ mb: 2 }}
+        >
+          {alert.message}
+        </Alert>
+      </Collapse>
+      <Box>
         {loading ? (
           <Box
             sx={{
@@ -285,6 +318,23 @@ const Report: React.FC = () => {
             paginationMode="server"
             paginationModel={paginationModel}
             onPaginationModelChange={(newModel) => setPaginationModel(newModel)}
+            sx={{
+              background: "#fff",
+              borderRadius: 2,
+              mt: 2,
+              border: "1px solid #e0e0e0",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+              "& .MuiDataGrid-cell": {
+                borderBottom: "1px solid #f0f0f0",
+              },
+              "& .MuiDataGrid-columnHeaders": {
+                background: "#f8f9fa",
+                borderBottom: "2px solid #e0e0e0",
+              },
+              "& .MuiDataGrid-row:hover": {
+                background: "#f8f9fa",
+              },
+            }}
           />
         )}
       </Box>
