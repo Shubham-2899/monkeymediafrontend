@@ -48,6 +48,12 @@ const AddEmails: React.FC = () => {
     message: string;
     severity: "success" | "error";
   }>({ open: false, message: "", severity: "success" });
+  const [lastUploadDetails, setLastUploadDetails] = useState<{
+    campaignId: string;
+    insertedCount: number;
+    modifiedCount: number;
+    totalCount: number;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSnackbarClose = () => setSnackbar({ ...snackbar, open: false });
@@ -132,6 +138,13 @@ const AddEmails: React.FC = () => {
         });
         setFile(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
+        setLastUploadDetails({
+          campaignId: response.data?.campaignId || campaignId,
+          insertedCount: response.data?.insertedCount || 0,
+          modifiedCount: response.data?.modifiedCount || 0,
+          totalCount:
+            response.data?.insertedCount + response.data?.modifiedCount || 0,
+        });
       }
     } catch (err: unknown) {
       const errorMessage =
@@ -294,6 +307,32 @@ const AddEmails: React.FC = () => {
                   aria-label="Enter campaign ID"
                 />
               </Stack>
+              {lastUploadDetails && (
+                <Typography
+                  variant="body2"
+                  sx={{
+                    mt: 2,
+                    mb: 1,
+                    color: "#1976d2",
+                    fontWeight: 500,
+                    textAlign: "left",
+                  }}
+                >
+                  Last Uploaded:
+                  <span style={{ color: "#333", marginLeft: 8 }}>
+                    Campaign ID: <b>{lastUploadDetails.campaignId}</b>
+                  </span>
+                  {/* <span style={{ color: "#333", marginLeft: 24 }}>
+                    Inserted: <b>{lastUploadDetails.insertedCount}</b>
+                  </span>
+                  <span style={{ color: "#333", marginLeft: 24 }}>
+                    Modified: <b>{lastUploadDetails.modifiedCount}</b>
+                  </span> */}
+                  <span style={{ color: "#333", marginLeft: 24 }}>
+                    Total: <b>{lastUploadDetails.totalCount}</b>
+                  </span>
+                </Typography>
+              )}
               <Button
                 variant="contained"
                 color="primary"

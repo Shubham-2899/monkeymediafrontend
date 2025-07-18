@@ -525,7 +525,7 @@ const EmailForm: React.FC = () => {
               />
 
               <TextareaAutosize
-                minRows={5}
+                minRows={4}
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
                 placeholder="Enter recipient's emails, separated by commas"
@@ -574,6 +574,7 @@ const EmailForm: React.FC = () => {
                   width: "100%",
                   padding: "10px",
                 }}
+                minRows={4}
               />
             </Box>
           </Card>

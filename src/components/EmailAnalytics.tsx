@@ -423,7 +423,7 @@ const EmailAnalytics: React.FC<EmailAnalyticsProps> = () => {
                                     {campaign.subject}
                                   </Typography>
                                   <Typography variant="body2" color="textSecondary">
-                                    {campaign.campaignId}
+                                    Campaign ID: {campaign.campaignId}
                                   </Typography>
                                 </Box>
                               </TableCell>
