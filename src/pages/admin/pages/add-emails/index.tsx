@@ -23,7 +23,7 @@ const emailSchema = yup
 
 const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB in bytes
 
-const DEMO_CSV_CONTENT = `email\nuser1@example.com\nuser2@example.com`;
+const DEMO_CSV_CONTENT = `emails\nuser1@example.com\nuser2@example.com`;
 
 const downloadDemoCSV = () => {
   const blob = new Blob([DEMO_CSV_CONTENT], { type: "text/csv" });

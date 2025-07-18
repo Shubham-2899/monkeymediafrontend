@@ -7,8 +7,6 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import Typography from "@mui/material/Typography";
-import AppBar from "@mui/material/AppBar";
 import CssBaseline from "@mui/material/CssBaseline";
 import PeopleIcon from "@mui/icons-material/People";
 import MailIcon from "@mui/icons-material/Mail";
@@ -75,7 +73,7 @@ export default function Admin() {
   return (
     <Box sx={{ display: "flex", minHeight: "100vh", background: "#fafafa" }}>
       <CssBaseline />
-      <AppBar
+      {/* <AppBar
         position="fixed"
         sx={{
           zIndex: (theme) => theme.zIndex.drawer + 1,
@@ -101,7 +99,7 @@ export default function Admin() {
             {selectedComponent}
           </Typography>
         </Toolbar>
-      </AppBar>
+      </AppBar> */}
 
       {showSidebar && (
         <Drawer

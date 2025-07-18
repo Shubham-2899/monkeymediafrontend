@@ -7,7 +7,9 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import Button from "@mui/material/Button";
-import mms from "../assets/mms.jpeg";
+import Paper from "@mui/material/Paper";
+// import mms from "../assets/mms.jpeg";
+import raspix from "../assets/raspix-logo.png";
 import { useAuth } from "../contexts/UserAuthContext";
 
 const shimmerStyle = {
@@ -62,49 +64,53 @@ function ResponsiveAppBar() {
   };
 
   return (
-    <AppBar
-      position="sticky"
-      color="transparent"
-      elevation={0}
-      sx={{
-        borderBottom: "1px solid #ddd",
-        backgroundColor: "#fff",
-        zIndex: 9999,
-      }}
-    >
-      <Toolbar disableGutters>
-        <div style={{ flexGrow: 1 }}>
-          <Link style={{ textDecoration: "none", color: "#777" }} to={`/home`}>
-            <img
-              src={mms}
-              alt="monkey media email marketing"
-              style={{
-                objectFit: "cover",
-                maxWidth: "150px",
-                margin: "5px",
-              }}
-            />
-          </Link>
-        </div>
-        {loading ? (
-          <Box sx={{ display: { xs: "none", md: "flex" }, gap: "10px" }}>
-            <div style={shimmerStyle}></div>
-            <div style={shimmerStyle}></div>
-            <div style={shimmerStyle}></div>
-            <div style={shimmerStyle}></div>
+    <Paper elevation={0} sx={{ borderRadius: 0, position: 'sticky', top: 0, zIndex: 9900 }}>
+      <AppBar
+        position="static"
+        color="transparent"
+        elevation={0}
+        sx={{
+          backgroundColor: "#fff",
+          borderBottom: "1px solid #e0e0e0",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
+        }}
+      >
+        <Toolbar disableGutters sx={{ minHeight: 76, px: { xs: 1, sm: 3 } }}>
+          <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
+            <Link style={{ textDecoration: "none", color: "#1976d2", display: 'flex', alignItems: 'center' }} to={`/home`}>
+              <img
+                src={raspix}
+                alt="monkey media email marketing"
+                style={{
+                  objectFit: "cover",
+                  maxWidth: "140px",
+                  margin: "5px 0",
+                  borderRadius: 6,
+                  // boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                }}
+              />
+              {/* <Typography variant="h6" sx={{ ml: 1, fontWeight: 700, color: '#1976d2', display: { xs: 'none', sm: 'block' } }}>
+                Monkey Media
+              </Typography> */}
+            </Link>
+          </Box>
+          {loading ? (
+          <Box sx={{ display: { xs: "none", md: "flex" }, gap: 2, alignItems: 'center' }}>
+            {[...Array(4)].map((_, i) => (
+              <Box key={i} sx={{ ...shimmerStyle, borderRadius: 2, width: 90, height: 32 }} />
+            ))}
           </Box>
         ) : login ? (
           <>
             <Box
               sx={{
                 display: { xs: "flex", md: "none" },
-                border: "1px solid #ddd",
-                borderRadius: "5px",
-                marginRight: "10px",
-                "&:hover": {
-                  backgroundColor: "#ddd",
-                },
-                backgroundColor: openNav ? "#ddd" : "transparent",
+                border: "1px solid #e0e0e0",
+                borderRadius: 2,
+                marginRight: 2,
+                backgroundColor: openNav ? "#f5f6fa" : "#fff",
+                boxShadow: openNav ? '0 1px 4px rgba(0,0,0,0.04)' : 'none',
+                transition: 'background 0.2s',
               }}
             >
               <IconButton
@@ -126,14 +132,14 @@ function ResponsiveAppBar() {
                   style={{
                     display: "flex",
                     flexDirection: "column",
-                    width: "100%",
-                    top: "57px",
+                    width: "100vw",
                     left: 0,
+                    top: 64,
                     position: "absolute",
-                    color: "#777",
+                    color: "#1976d2",
                     backgroundColor: "#fff",
-                    boxShadow: "0 1px 0 #888",
-                    zIndex: 9,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                    zIndex: 1201,
                   }}
                 >
                   {pages.map((page) => {
@@ -143,19 +149,19 @@ function ResponsiveAppBar() {
                         key={page}
                         onClick={handleMenuItemClick}
                         style={{
-                          paddingLeft: "10px",
+                          padding: '12px 18px',
                           textDecoration: "none",
-                          color: "#777",
-                          backgroundColor:
-                            location.pathname === to
-                              ? "#00acef"
-                              : "transparent",
+                          color: location.pathname === to ? "#1976d2" : "#555",
+                          background: location.pathname === to ? "#e3f2fd" : "transparent",
+                          fontWeight: location.pathname === to ? 700 : 500,
+                          borderLeft: location.pathname === to ? '4px solid #1976d2' : '4px solid transparent',
+                          transition: 'all 0.2s',
                         }}
                         to={to}
                       >
                         <Typography
-                          variant="h6"
-                          style={{ textDecoration: "none", color: "#777" }}
+                          variant="subtitle1"
+                          sx={{ fontWeight: 600, letterSpacing: 0.2 }}
                         >
                           {page}
                         </Typography>
@@ -167,7 +173,7 @@ function ResponsiveAppBar() {
                       to="/admin"
                       onClick={handleMenuItemClick}
                       style={{
-                        paddingLeft: "10px",
+                        padding: '12px 18px',
                         textDecoration: "none",
                         color: "#777",
                         backgroundColor: location.pathname?.includes("admin")
@@ -176,8 +182,8 @@ function ResponsiveAppBar() {
                       }}
                     >
                       <Typography
-                        variant="h6"
-                        style={{ textDecoration: "none", color: "#777" }}
+                        variant="subtitle1"
+                        sx={{ fontWeight: 600, letterSpacing: 0.2 }}
                       >
                         Admin
                       </Typography>
@@ -185,7 +191,14 @@ function ResponsiveAppBar() {
                   )}
                   <Button
                     onClick={handleLogOut}
-                    sx={{ paddingLeft: "10px", color: "#777" }}
+                    sx={{
+                      padding: '12px 18px',
+                      color: '#d32f2f',
+                      fontWeight: 600,
+                      textAlign: 'left',
+                      justifyContent: 'flex-start',
+                      fontSize: 16,
+                    }}
                   >
                     Logout
                   </Button>
@@ -198,10 +211,11 @@ function ResponsiveAppBar() {
                 display: {
                   xs: "none",
                   md: "flex",
-                  justifyContent: "end",
-                  gap: "25px",
-                  paddingRight: "30px",
+                  justifyContent: "flex-end",
+                  gap: 2,
+                  pr: 4,
                 },
+                alignItems: 'center',
               }}
             >
               {pages.map((page) => {
@@ -212,13 +226,23 @@ function ResponsiveAppBar() {
                     component={Link}
                     to={to}
                     sx={{
-                      my: 2,
-                      color: location.pathname === to ? "#00acef" : "#777",
-                      display: "block",
+                      color:  location.pathname === to ? "#1976d2" : "#555",
+                      background:  "transparent",
+                      fontWeight:   500,
+                      borderRadius: 2,
+                      px: 2.5,
+                      py: 1.2,
+                      minWidth: 90,
+                      boxShadow: location.pathname === to ? '0 2px 8px rgba(25,118,210,0.04)' : 'none',
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        background: '#e3f2fd',
+                        color: '#1976d2',
+                      },
                     }}
                     onClick={handleMenuItemClick}
                   >
-                    <Typography variant="h6" sx={{ fontWeight: "500" }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: 0.2 }}>
                       {page}
                     </Typography>
                   </Button>
@@ -237,14 +261,25 @@ function ResponsiveAppBar() {
                   }}
                   onClick={handleMenuItemClick}
                 >
-                  <Typography variant="h6" sx={{ fontWeight: "500" }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: 0.2 }}>
                     Admin
                   </Typography>
                 </Button>
               )}
               <Button
                 onClick={handleLogOut}
-                sx={{ color: "#777", fontSize: "20px" }}
+                sx={{
+                  color: '#d32f2f',
+                  fontWeight: 600,
+                  fontSize: 16,
+                  px: 2.5,
+                  py: 1.2,
+                  borderRadius: 2,
+                  ml: 1,
+                  '&:hover': {
+                    background: '#ffebee',
+                  },
+                }}
               >
                 Logout
               </Button>
@@ -254,15 +289,27 @@ function ResponsiveAppBar() {
           <Button
             component={Link}
             to="/signin"
-            sx={{ my: 2, mr: 2, color: "#777", display: "block" }}
+            sx={{
+              color: '#1976d2',
+              fontWeight: 700,
+              fontSize: 16,
+              px: 2.5,
+              py: 1.2,
+              borderRadius: 2,
+              mr: 2,
+              '&:hover': {
+                background: '#e3f2fd',
+              },
+            }}
           >
-            <Typography variant="h6" sx={{ fontWeight: "500" }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
               Sign In
             </Typography>
           </Button>
         )}
-      </Toolbar>
-    </AppBar>
+        </Toolbar>
+      </AppBar>
+    </Paper>
   );
 }
 
