@@ -24,6 +24,7 @@ import {
   Card,
   Chip,
   LinearProgress,
+  Stack,
 } from "@mui/material";
 
 import CloseIcon from "@mui/icons-material/Close";
@@ -38,6 +39,7 @@ import { CampaignService } from "../../utils/campaignService";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { useLocation } from "react-router-dom";
 import { Mode } from "../../Interfaces";
+import EmailIcon from "@mui/icons-material/Email";
 
 interface FormattedData {
   label: string;
@@ -427,15 +429,39 @@ const EmailForm: React.FC = () => {
   return (
     <Box
       sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
         minHeight: "100vh",
-        padding: "20px",
-        mt: "10px",
+        p: { xs: 1, sm: 3 },
+        background: "#fafafa",
       }}
     >
-      <Grid container spacing={2}>
+      {/* Consistent Header */}
+      <Box
+        sx={{
+          pb: 1,
+          // background: "#fff",
+          color: "#333",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          borderBottom: "1px solid #e0e0e0",
+          width: "100%",
+          gap: 2,
+          mb: 3,
+        }}
+      >
+        <Stack direction="row" spacing={2} alignItems="center">
+          <EmailIcon sx={{ fontSize: 32, color: "#1976d2" }} />
+          <Box>
+            <Typography variant="h5" fontWeight={600} color="#333">
+              Mailing
+            </Typography>
+            <Typography variant="body2" sx={{ color: "#666" }}>
+              Create and send email campaigns
+            </Typography>
+          </Box>
+        </Stack>
+      </Box>
+      <Grid container spacing={2} justifyContent="center">
         <Grid item xs={12} sm={3}>
           <Box
             sx={{
@@ -499,7 +525,7 @@ const EmailForm: React.FC = () => {
               />
 
               <TextareaAutosize
-                minRows={5}
+                minRows={4}
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
                 placeholder="Enter recipient's emails, separated by commas"
@@ -548,6 +574,7 @@ const EmailForm: React.FC = () => {
                   width: "100%",
                   padding: "10px",
                 }}
+                minRows={4}
               />
             </Box>
           </Card>
@@ -670,7 +697,7 @@ const EmailForm: React.FC = () => {
             {/* Mode Selection */}
             <Box sx={{ mt: 2 }}>
               <Typography variant="subtitle2" gutterBottom>
-                Campaign Mode:
+                Campaign Modes:
               </Typography>
               <FormControl component="fieldset">
                 <RadioGroup
@@ -743,7 +770,7 @@ const EmailForm: React.FC = () => {
 
       {/* Campaign Status */}
       {(campaignStarted || campaignPaused) && (
-        <Card sx={{ mt: 3, p: 2, width: "100%", maxWidth: 800 }}>
+        <Card sx={{ margin: '24px auto', p: 1, width: "100%", maxWidth: 800 }}>
           <Typography variant="h6" gutterBottom>
             Campaign Status
           </Typography>
@@ -819,7 +846,7 @@ const EmailForm: React.FC = () => {
       </Collapse>
 
       {/* Action Buttons */}
-      <Box sx={{ mt: 3, display: "flex", gap: 2, flexWrap: "wrap" }}>
+      <Box sx={{ mt: 3, display: "flex", justifyContent: "center", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
         {mode === "test" || mode === "manual" ? (
           // Test/manual mode buttons
           <>

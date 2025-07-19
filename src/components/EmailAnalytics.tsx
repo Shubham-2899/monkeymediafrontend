@@ -18,6 +18,7 @@ import {
   Paper,
   IconButton,
   Tooltip,
+  Stack,
 } from "@mui/material";
 import {
   Refresh,
@@ -32,6 +33,7 @@ import {
   PlayArrow,
   Pause,
   Stop,
+  Analytics,
 } from "@mui/icons-material";
 import { Campaign, CampaignStats } from "../Interfaces";
 import { CampaignService } from "../utils/campaignService";
@@ -255,333 +257,381 @@ const EmailAnalytics: React.FC<EmailAnalyticsProps> = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 3,
-        }}
-      >
-        <Typography variant="h4" component="h1">
-          Email Analytics
-        </Typography>
-        <Box sx={{ display: "flex", gap: 1 }}>
-          <Tooltip title="Export Data">
-            <IconButton onClick={handleExportData}>
-              <Download />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Refresh">
-            <IconButton onClick={fetchAnalytics} disabled={loading}>
-              <Refresh />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Box>
-
-      {/* Summary Cards */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                <Email color="primary" sx={{ mr: 1 }} />
-                <Typography color="textSecondary">Total Emails</Typography>
+    <Box sx={{ maxWidth: "100%", mx: "auto" }}>
+      <Card elevation={1} sx={{ borderRadius: 2, overflow: "hidden", border: "1px solid #e0e0e0" }}>
+        <CardContent sx={{ p: 0 }}>
+          {/* Header */}
+          <Box sx={{ 
+            p: 3, 
+            background: "#ffffff",
+            color: "#333",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderBottom: "1px solid #e0e0e0"
+          }}>
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Analytics sx={{ fontSize: 32, color: "#1976d2" }} />
+              <Box>
+                <Typography variant="h5" fontWeight={600} color="#333">
+                  Email Analytics
+                </Typography>
+                <Typography variant="body2" sx={{ color: "#666" }}>
+                  Campaign performance and delivery insights
+                </Typography>
               </Box>
-              <Typography variant="h4" color="primary">
-                {totalStats.total.toLocaleString()}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                <CheckCircle color="success" sx={{ mr: 1 }} />
-                <Typography color="textSecondary">Delivered</Typography>
-              </Box>
-              <Typography variant="h4" color="success.main">
-                {totalStats.sent.toLocaleString()}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                {deliveryRate.toFixed(1)}% delivery rate
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                <Error color="error" sx={{ mr: 1 }} />
-                <Typography color="textSecondary">Failed</Typography>
-              </Box>
-              <Typography variant="h4" color="error">
-                {totalStats.failed.toLocaleString()}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                {bounceRate.toFixed(1)}% bounce rate
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                <Schedule color="warning" sx={{ mr: 1 }} />
-                <Typography color="textSecondary">Pending</Typography>
-              </Box>
-              <Typography variant="h4" color="warning.main">
-                {totalStats.pending.toLocaleString()}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+            </Stack>
+            <Stack direction="row" spacing={1}>
+              <Tooltip title="Export Data">
+                <IconButton 
+                  onClick={handleExportData}
+                  sx={{ color: "#666" }}
+                >
+                  <Download />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Refresh">
+                <IconButton 
+                  onClick={fetchAnalytics} 
+                  disabled={loading}
+                  sx={{ color: "#666" }}
+                >
+                  <Refresh />
+                </IconButton>
+              </Tooltip>
+            </Stack>
+          </Box>
 
-      {/* Campaign Performance Table */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Campaign Performance
-          </Typography>
-          {loading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-              <CircularProgress />
-            </Box>
-          ) : (
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Campaign</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell align="right">Total</TableCell>
-                    <TableCell align="right">Sent</TableCell>
-                    <TableCell align="right">Failed</TableCell>
-                    <TableCell align="right">Pending</TableCell>
-                    <TableCell align="right">Delivery Rate</TableCell>
-                    <TableCell align="center">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {campaigns.map((campaign) => {
-                    const stats = campaignStats[campaign.campaignId];
-                    if (!stats) return null;
+          {/* Content */}
+          <Box sx={{ p: 3 }}>
+            {/* Summary Cards */}
+            <Grid container spacing={3} sx={{ mb: 4 }}>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card elevation={0} sx={{ border: "1px solid #e0e0e0", borderRadius: 2, height: "100%" }}>
+                  <CardContent>
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                      <Email color="primary" sx={{ mr: 1 }} />
+                      <Typography color="textSecondary" variant="body2" fontWeight={500}>
+                        Total Emails
+                      </Typography>
+                    </Box>
+                    <Typography variant="h4" color="primary" fontWeight={600}>
+                      {totalStats.total.toLocaleString()}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card elevation={0} sx={{ border: "1px solid #e0e0e0", borderRadius: 2, height: "100%" }}>
+                  <CardContent>
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                      <CheckCircle color="success" sx={{ mr: 1 }} />
+                      <Typography color="textSecondary" variant="body2" fontWeight={500}>
+                        Delivered
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+                      <Typography variant="h4" color="success.main" fontWeight={600}>
+                        {totalStats.sent.toLocaleString()}
+                      </Typography>
+                      <Typography variant="caption" color="textSecondary" sx={{ fontSize: "0.75rem" }}>
+                        ({deliveryRate.toFixed(1)}% delivery rate)
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card elevation={0} sx={{ border: "1px solid #e0e0e0", borderRadius: 2, height: "100%" }}>
+                  <CardContent>
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                      <Error color="error" sx={{ mr: 1 }} />
+                      <Typography color="textSecondary" variant="body2" fontWeight={500}>
+                        Failed
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+                      <Typography variant="h4" color="error" fontWeight={600}>
+                        {totalStats.failed.toLocaleString()}
+                      </Typography>
+                      <Typography variant="caption" color="textSecondary" sx={{ fontSize: "0.75rem" }}>
+                        ({bounceRate.toFixed(1)}% bounce rate)
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card elevation={0} sx={{ border: "1px solid #e0e0e0", borderRadius: 2, height: "100%" }}>
+                  <CardContent>
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                      <Schedule color="warning" sx={{ mr: 1 }} />
+                      <Typography color="textSecondary" variant="body2" fontWeight={500}>
+                        Pending
+                      </Typography>
+                    </Box>
+                    <Typography variant="h4" color="warning.main" fontWeight={600}>
+                      {totalStats.pending.toLocaleString()}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
 
-                    const deliveryRate =
-                      stats.counts.sent + stats.counts.failed > 0
-                        ? (stats.counts.sent /
-                            (stats.counts.sent + stats.counts.failed)) *
-                          100
-                        : 0;
+            {/* Campaign Performance Table */}
+            <Card elevation={0} sx={{ border: "1px solid #e0e0e0", borderRadius: 2 }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom color="#333" fontWeight={600}>
+                  Campaign Performance
+                </Typography>
+                {loading ? (
+                  <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+                    <CircularProgress color="primary" />
+                  </Box>
+                ) : (
+                  <TableContainer component={Paper} elevation={0} sx={{ border: "1px solid #e0e0e0" }}>
+                    <Table>
+                      <TableHead>
+                        <TableRow sx={{ background: "#f8f9fa" }}>
+                          <TableCell sx={{ fontWeight: 600 }}>Campaign</TableCell>
+                          <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 600 }}>Total</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 600 }}>Sent</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 600 }}>Failed</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 600 }}>Pending</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 600 }}>Delivery Rate</TableCell>
+                          <TableCell align="center" sx={{ fontWeight: 600 }}>Actions</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {campaigns.map((campaign) => {
+                          const stats = campaignStats[campaign.campaignId];
+                          if (!stats) return null;
 
-                    return (
-                      <TableRow key={campaign.campaignId}>
-                        <TableCell>
-                          <Box>
-                            <Typography variant="subtitle2">
-                              {campaign.subject}
-                            </Typography>
-                            <Typography variant="body2" color="textSecondary">
-                              {campaign.campaignId}
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={campaign.status.toUpperCase()}
-                            color={
-                              campaign.status === "running"
-                                ? "success"
-                                : campaign.status === "paused"
-                                ? "warning"
-                                : campaign.status === "completed"
-                                ? "info"
-                                : "error"
-                            }
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell align="right">
-                          {stats.counts.total.toLocaleString()}
-                        </TableCell>
-                        <TableCell align="right">
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "flex-end",
-                            }}
-                          >
-                            <CheckCircle
-                              color="success"
-                              sx={{ mr: 0.5, fontSize: 16 }}
-                            />
-                            {stats.counts.sent.toLocaleString()}
-                          </Box>
-                        </TableCell>
-                        <TableCell align="right">
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "flex-end",
-                            }}
-                          >
-                            <Error
-                              color="error"
-                              sx={{ mr: 0.5, fontSize: 16 }}
-                            />
-                            {stats.counts.failed.toLocaleString()}
-                          </Box>
-                        </TableCell>
-                        <TableCell align="right">
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "flex-end",
-                            }}
-                          >
-                            <Schedule
-                              color="warning"
-                              sx={{ mr: 0.5, fontSize: 16 }}
-                            />
-                            {stats.counts.pending.toLocaleString()}
-                          </Box>
-                        </TableCell>
-                        <TableCell align="right">
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "flex-end",
-                            }}
-                          >
-                            {deliveryRate >= 95 ? (
-                              <TrendingUp
-                                color="success"
-                                sx={{ mr: 0.5, fontSize: 16 }}
-                              />
-                            ) : (
-                              <TrendingDown
-                                color="error"
-                                sx={{ mr: 0.5, fontSize: 16 }}
-                              />
-                            )}
-                            {deliveryRate.toFixed(1)}%
-                          </Box>
-                        </TableCell>
-                        <TableCell align="center">
-                          <Box
-                            sx={{
-                              display: "flex",
-                              gap: 1,
-                              justifyContent: "center",
-                            }}
-                          >
-                            <Tooltip title="View Details">
-                              <IconButton
-                                size="small"
-                                onClick={() =>
-                                  handleViewDetails(campaign.campaignId)
-                                }
-                              >
-                                <Visibility />
-                              </IconButton>
-                            </Tooltip>
+                          const deliveryRate =
+                            stats.counts.sent + stats.counts.failed > 0
+                              ? (stats.counts.sent /
+                                  (stats.counts.sent + stats.counts.failed)) *
+                                100
+                              : 0;
 
-                            {/* Campaign Control Actions */}
-                            {campaign.status === "paused" && (
-                              <Tooltip title="Resume Campaign">
-                                <IconButton
+                          return (
+                            <TableRow key={campaign.campaignId} sx={{ '&:hover': { background: '#f8f9fa' } }}>
+                              <TableCell>
+                                <Box>
+                                  <Typography variant="subtitle2" fontWeight={500}>
+                                    {campaign.subject}
+                                  </Typography>
+                                  <Typography variant="body2" color="textSecondary">
+                                    Campaign ID: {campaign.campaignId}
+                                  </Typography>
+                                </Box>
+                              </TableCell>
+                              <TableCell>
+                                <Chip
+                                  label={campaign.status.toUpperCase()}
+                                  color={
+                                    campaign.status === "running"
+                                      ? "success"
+                                      : campaign.status === "paused"
+                                      ? "warning"
+                                      : campaign.status === "completed"
+                                      ? "info"
+                                      : "error"
+                                  }
                                   size="small"
-                                  color="success"
-                                  onClick={() => handleResumeCampaign(campaign)}
-                                  disabled={actionLoading[campaign.campaignId]}
+                                  sx={{ fontWeight: 500 }}
+                                />
+                              </TableCell>
+                              <TableCell align="right">
+                                <Typography variant="body2" fontWeight={500}>
+                                  {stats.counts.total.toLocaleString()}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="right">
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "flex-end",
+                                  }}
                                 >
-                                  {actionLoading[campaign.campaignId] ? (
-                                    <CircularProgress size={16} />
-                                  ) : (
-                                    <PlayArrow />
-                                  )}
-                                </IconButton>
-                              </Tooltip>
-                            )}
-
-                            {campaign.status === "running" && (
-                              <>
-                                <Tooltip title="Pause Campaign">
-                                  <IconButton
-                                    size="small"
+                                  <CheckCircle
+                                    color="success"
+                                    sx={{ mr: 0.5, fontSize: 16 }}
+                                  />
+                                  <Typography variant="body2" fontWeight={500}>
+                                    {stats.counts.sent.toLocaleString()}
+                                  </Typography>
+                                </Box>
+                              </TableCell>
+                              <TableCell align="right">
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "flex-end",
+                                  }}
+                                >
+                                  <Error
+                                    color="error"
+                                    sx={{ mr: 0.5, fontSize: 16 }}
+                                  />
+                                  <Typography variant="body2" fontWeight={500}>
+                                    {stats.counts.failed.toLocaleString()}
+                                  </Typography>
+                                </Box>
+                              </TableCell>
+                              <TableCell align="right">
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "flex-end",
+                                  }}
+                                >
+                                  <Schedule
                                     color="warning"
-                                    onClick={() =>
-                                      handlePauseCampaign(campaign.campaignId)
-                                    }
-                                    disabled={
-                                      actionLoading[campaign.campaignId]
-                                    }
-                                  >
-                                    {actionLoading[campaign.campaignId] ? (
-                                      <CircularProgress size={16} />
-                                    ) : (
-                                      <Pause />
-                                    )}
-                                  </IconButton>
-                                </Tooltip>
-
-                                {campaign.jobId && (
-                                  <Tooltip title="Stop Campaign">
+                                    sx={{ mr: 0.5, fontSize: 16 }}
+                                  />
+                                  <Typography variant="body2" fontWeight={500}>
+                                    {stats.counts.pending.toLocaleString()}
+                                  </Typography>
+                                </Box>
+                              </TableCell>
+                              <TableCell align="right">
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "flex-end",
+                                  }}
+                                >
+                                  {deliveryRate >= 95 ? (
+                                    <TrendingUp
+                                      color="success"
+                                      sx={{ mr: 0.5, fontSize: 16 }}
+                                    />
+                                  ) : (
+                                    <TrendingDown
+                                      color="error"
+                                      sx={{ mr: 0.5, fontSize: 16 }}
+                                    />
+                                  )}
+                                  <Typography variant="body2" fontWeight={500}>
+                                    {deliveryRate.toFixed(1)}%
+                                  </Typography>
+                                </Box>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    gap: 1,
+                                    justifyContent: "center",
+                                  }}
+                                >
+                                  <Tooltip title="View Details">
                                     <IconButton
                                       size="small"
-                                      color="error"
                                       onClick={() =>
-                                        handleStopCampaign(
-                                          campaign.jobId!,
-                                          campaign.campaignId
-                                        )
+                                        handleViewDetails(campaign.campaignId)
                                       }
-                                      disabled={
-                                        actionLoading[campaign.campaignId]
-                                      }
+                                      sx={{ color: "#666" }}
                                     >
-                                      {actionLoading[campaign.campaignId] ? (
-                                        <CircularProgress size={16} />
-                                      ) : (
-                                        <Stop />
-                                      )}
+                                      <Visibility />
                                     </IconButton>
                                   </Tooltip>
-                                )}
-                              </>
-                            )}
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
+
+                                  {/* Campaign Control Actions */}
+                                  {campaign.status === "paused" && (
+                                    <Tooltip title="Resume Campaign">
+                                      <IconButton
+                                        size="small"
+                                        color="success"
+                                        onClick={() => handleResumeCampaign(campaign)}
+                                        disabled={actionLoading[campaign.campaignId]}
+                                      >
+                                        {actionLoading[campaign.campaignId] ? (
+                                          <CircularProgress size={16} />
+                                        ) : (
+                                          <PlayArrow />
+                                        )}
+                                      </IconButton>
+                                    </Tooltip>
+                                  )}
+
+                                  {campaign.status === "running" && (
+                                    <>
+                                      <Tooltip title="Pause Campaign">
+                                        <IconButton
+                                          size="small"
+                                          color="warning"
+                                          onClick={() =>
+                                            handlePauseCampaign(campaign.campaignId)
+                                          }
+                                          disabled={
+                                            actionLoading[campaign.campaignId]
+                                          }
+                                        >
+                                          {actionLoading[campaign.campaignId] ? (
+                                            <CircularProgress size={16} />
+                                          ) : (
+                                            <Pause />
+                                          )}
+                                        </IconButton>
+                                      </Tooltip>
+
+                                      {campaign.jobId && (
+                                        <Tooltip title="Stop Campaign">
+                                          <IconButton
+                                            size="small"
+                                            color="error"
+                                            onClick={() =>
+                                              handleStopCampaign(
+                                                campaign.jobId!,
+                                                campaign.campaignId
+                                              )
+                                            }
+                                            disabled={
+                                              actionLoading[campaign.campaignId]
+                                            }
+                                          >
+                                            {actionLoading[campaign.campaignId] ? (
+                                              <CircularProgress size={16} />
+                                            ) : (
+                                              <Stop />
+                                            )}
+                                          </IconButton>
+                                        </Tooltip>
+                                      )}
+                                    </>
+                                  )}
+                                </Box>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Alert */}
+            <Collapse in={alert.open} sx={{ mt: 2 }}>
+              <Alert
+                severity={alert.severity}
+                sx={{ mb: 2 }}
+                onClose={() => setAlert({ ...alert, open: false })}
+              >
+                {alert.message}
+              </Alert>
+            </Collapse>
+          </Box>
         </CardContent>
       </Card>
-
-      {/* Alert */}
-      <Collapse in={alert.open}>
-        <Alert
-          severity={alert.severity}
-          sx={{ mb: 2 }}
-          onClose={() => setAlert({ ...alert, open: false })}
-        >
-          {alert.message}
-        </Alert>
-      </Collapse>
     </Box>
   );
 };

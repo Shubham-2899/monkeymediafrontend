@@ -8,9 +8,16 @@ import {
   IconButton,
   Alert,
   CircularProgress,
+  Card,
+  CardContent,
+  Stack,
+  Chip,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import CloseIcon from "@mui/icons-material/Close";
+import BlockIcon from "@mui/icons-material/Block";
+import SearchIcon from "@mui/icons-material/Search";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { apiGet } from "../../../../utils/api";
 
 interface ISuppression {
@@ -73,7 +80,17 @@ const Suppression: React.FC = () => {
   };
 
   const columns: GridColDef[] = [
-    { field: "email", headerName: "Email", flex: 1, maxWidth: 300 },
+    { 
+      field: "email", 
+      headerName: "Email", 
+      flex: 1, 
+      maxWidth: 300,
+      renderCell: (params) => (
+        <Typography variant="body2" fontWeight={500}>
+          {params.value}
+        </Typography>
+      ),
+    },
     {
       field: "date",
       headerName: "Date",
@@ -88,131 +105,212 @@ const Suppression: React.FC = () => {
           day: "numeric",
         });
       },
+      renderCell: (params) => (
+        <Chip
+          label={params.value}
+          size="small"
+          variant="outlined"
+          color="default"
+        />
+      ),
     },
-    { field: "domain", headerName: "Domain", flex: 1, maxWidth: 250 },
+    { 
+      field: "domain", 
+      headerName: "Domain", 
+      flex: 1, 
+      maxWidth: 250,
+      renderCell: (params) => (
+        <Typography variant="body2" color="text.secondary">
+          {params.value}
+        </Typography>
+      ),
+    },
   ];
 
   return (
-    <Box>
-      <Box sx={{ mt: "20px", width: "100%" }}>
-        <Typography variant="h5" gutterBottom sx={{ mb: 2 }}>
-          Suppression List
-        </Typography>
-
-        <Box
-          component={"form"}
-          onSubmit={(e) => {
-            e.preventDefault();
-            console.log("🚀 ~ filterDates:", filterDates);
-            setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
-          }}
-          sx={{
-            mb: 2,
+    <Box sx={{ maxWidth: "100%", mx: "auto" }}>
+      <Card elevation={1} sx={{ borderRadius: 2, overflow: "hidden", border: "1px solid #e0e0e0" }}>
+        <CardContent sx={{ p: 0 }}>
+          {/* Header */}
+          <Box sx={{ 
+            p: 3, 
+            background: "#ffffff",
+            color: "#333",
             display: "flex",
-            gap: 2,
-            flexDirection: { xs: "column", sm: "row" },
-          }}
-        >
-          <TextField
-            label="From Date"
-            type="date"
-            size="small"
-            InputLabelProps={{ shrink: true }}
-            value={filterDates.fromDate}
-            onChange={(e) =>
-              setFilterDates((prev) => ({
-                ...prev,
-                fromDate: e.target.value,
-              }))
-            }
-          />
-          <TextField
-            label="To Date"
-            type="date"
-            size="small"
-            InputLabelProps={{ shrink: true }}
-            value={filterDates.toDate}
-            onChange={(e) =>
-              setFilterDates((prev) => ({
-                ...prev,
-                toDate: e.target.value,
-              }))
-            }
-          />
-
-          <Box
-            sx={{
-              display: "flex",
-              gap: 2,
-              flexDirection: "row",
-              justifyContent: { xs: "center", sm: "flex-start" },
-            }}
-          >
-            <Button variant="outlined" type="submit">
-              Search
-            </Button>
-            <Button variant="outlined" onClick={handleReset}>
-              Reset
-            </Button>
-          </Box>
-        </Box>
-
-        <Collapse in={alert.open} sx={{ mt: 2 }}>
-          <Alert
-            severity={alert.severity}
-            action={
-              <IconButton
-                aria-label="close"
-                color="inherit"
-                size="small"
-                onClick={() => setAlert({ ...alert, open: false })}
-              >
-                <CloseIcon fontSize="inherit" />
-              </IconButton>
-            }
-            sx={{ mb: 2 }}
-          >
-            {alert.message}
-          </Alert>
-        </Collapse>
-
-        {suppressionData.length === 0 && loading ? (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              height: "100%",
-            }}
-          >
-            <CircularProgress />
-          </Box>
-        ) : (
-          <DataGrid
-            rows={suppressionData.map((item, index) => ({
-              id: index + paginationModel.page * paginationModel.pageSize,
-              ...item,
-            }))}
-            columns={columns}
-            disableColumnFilter
-            disableColumnMenu
-            loading={loading || suppressionData.length === 0}
-            rowCount={totalElements}
-            pagination
-            pageSizeOptions={[10, 25, 50, 100]}
-            paginationMode="server"
-            paginationModel={paginationModel}
-            onPaginationModelChange={(newModel) => setPaginationModel(newModel)}
-            slots={{
-              noRowsOverlay: () => (
-                <Typography sx={{ mt: 2 }} align="center">
-                  No suppression records found.
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderBottom: "1px solid #e0e0e0"
+          }}>
+            <Stack direction="row" spacing={2} alignItems="center">
+              <BlockIcon sx={{ fontSize: 32, color: "#d32f2f" }} />
+              <Box>
+                <Typography variant="h5" fontWeight={600} color="#333">
+                  Suppression List
                 </Typography>
-              ),
-            }}
-          />
-        )}
-      </Box>
+                <Typography variant="body2" sx={{ color: "#666" }}>
+                  {totalElements} suppressed emails
+                </Typography>
+              </Box>
+            </Stack>
+
+            {/* Filters moved to header */}
+            <Box
+              component="form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                console.log("🚀 ~ filterDates:", filterDates);
+                setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
+              }}
+              sx={{
+                display: "flex",
+                gap: 2,
+                alignItems: "center",
+                flexDirection: { xs: "column", sm: "row" },
+              }}
+            >
+              <TextField
+                label="From Date"
+                type="date"
+                size="small"
+                InputLabelProps={{ shrink: true }}
+                value={filterDates.fromDate}
+                onChange={(e) =>
+                  setFilterDates((prev) => ({
+                    ...prev,
+                    fromDate: e.target.value,
+                  }))
+                }
+                sx={{ minWidth: 150, background: "white", borderRadius: 1 }}
+              />
+              <TextField
+                label="To Date"
+                type="date"
+                size="small"
+                InputLabelProps={{ shrink: true }}
+                value={filterDates.toDate}
+                onChange={(e) =>
+                  setFilterDates((prev) => ({
+                    ...prev,
+                    toDate: e.target.value,
+                  }))
+                }
+                sx={{ minWidth: 150, background: "white", borderRadius: 1 }}
+              />
+              <Stack direction="row" spacing={1}>
+                <Button 
+                  variant="contained" 
+                  type="submit"
+                  startIcon={<SearchIcon />}
+                  sx={{ borderRadius: 2, textTransform: "none" }}
+                  size="small"
+                >
+                  Search
+                </Button>
+                <Button 
+                  variant="outlined" 
+                  onClick={handleReset}
+                  startIcon={<RefreshIcon />}
+                  sx={{ borderRadius: 2, textTransform: "none" }}
+                  size="small"
+                >
+                  Reset
+                </Button>
+              </Stack>
+            </Box>
+          </Box>
+
+          {/* Content */}
+          <Box sx={{ p: 3, pt:0 }}>
+            <Collapse in={alert.open} sx={{ mb: 2 }}>
+              <Alert
+                severity={alert.severity}
+                action={
+                  <IconButton
+                    aria-label="close"
+                    color="inherit"
+                    size="small"
+                    onClick={() => setAlert({ ...alert, open: false })}
+                  >
+                    <CloseIcon fontSize="inherit" />
+                  </IconButton>
+                }
+              >
+                {alert.message}
+              </Alert>
+            </Collapse>
+
+            {suppressionData.length === 0 && loading ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: 400,
+                  flexDirection: "column",
+                  gap: 2
+                }}
+              >
+                <CircularProgress size={40} color="primary" />
+                <Typography variant="body2" color="text.secondary">
+                  Loading suppression data...
+                </Typography>
+              </Box>
+            ) : (
+              <Box sx={{ height: 500, width: "100%" }}>
+                <DataGrid
+                  rows={suppressionData.map((item, index) => ({
+                    id: index + paginationModel.page * paginationModel.pageSize,
+                    ...item,
+                  }))}
+                  columns={columns}
+                  disableColumnFilter
+                  disableColumnMenu
+                  loading={loading || suppressionData.length === 0}
+                  rowCount={totalElements}
+                  pagination
+                  pageSizeOptions={[10, 25, 50, 100]}
+                  paginationMode="server"
+                  paginationModel={paginationModel}
+                  onPaginationModelChange={(newModel) => setPaginationModel(newModel)}
+                  sx={{
+                    border: "none",
+                    "& .MuiDataGrid-cell": {
+                      borderBottom: "1px solid #f0f0f0",
+                    },
+                    "& .MuiDataGrid-columnHeaders": {
+                      background: "#f8f9fa",
+                      borderBottom: "2px solid #e0e0e0",
+                    },
+                    "& .MuiDataGrid-row:hover": {
+                      background: "#f8f9fa",
+                    },
+                  }}
+                  slots={{
+                    noRowsOverlay: () => (
+                      <Box sx={{ 
+                        display: "flex", 
+                        flexDirection: "column", 
+                        alignItems: "center", 
+                        justifyContent: "center", 
+                        height: "100%",
+                        gap: 2
+                      }}>
+                        <BlockIcon sx={{ fontSize: 48, color: "text.secondary" }} />
+                        <Typography variant="h6" color="text.secondary">
+                          No suppression records found
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Try adjusting your filters or check back later
+                        </Typography>
+                      </Box>
+                    ),
+                  }}
+                />
+              </Box>
+            )}
+          </Box>
+        </CardContent>
+      </Card>
     </Box>
   );
 };
