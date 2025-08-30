@@ -19,6 +19,11 @@ import {
   IconButton,
   Tooltip,
   Stack,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
 } from "@mui/material";
 import {
   Refresh,
@@ -34,6 +39,7 @@ import {
   Pause,
   Stop,
   Analytics,
+  Block,
 } from "@mui/icons-material";
 import { Campaign, CampaignStats } from "../Interfaces";
 import { CampaignService } from "../utils/campaignService";
@@ -57,6 +63,12 @@ const EmailAnalytics: React.FC<EmailAnalyticsProps> = () => {
     severity: "success" | "error" | "warning";
     message: string;
   }>({ open: false, severity: "success", message: "" });
+
+  const [endCampaignModal, setEndCampaignModal] = useState({
+    open: false,
+    campaignId: "",
+    campaignName: "",
+  });
 
   useEffect(() => {
     fetchAnalytics();
@@ -254,6 +266,41 @@ const EmailAnalytics: React.FC<EmailAnalyticsProps> = () => {
         message: `Campaign status is ${campaign.status}. Only paused or stopped campaigns can be edited.`,
       });
     }
+  };
+
+  const handleEndCampaign = async () => {
+    if (!endCampaignModal.campaignId) return;
+    
+    setActionLoading((prev) => ({ ...prev, [endCampaignModal.campaignId]: true }));
+    try {
+      const response = await CampaignService.endCampaign(endCampaignModal.campaignId);
+
+      setAlert({
+        open: true,
+        severity: "success",
+        message: response.message || `Campaign ${endCampaignModal.campaignId} ended successfully`,
+      });
+      closeEndCampaignModal();
+      await fetchAnalytics();
+    } catch (error) {
+      console.error("Error ending campaign:", error);
+      setAlert({
+        open: true,
+        severity: "error",
+        message: `Failed to end campaign ${endCampaignModal.campaignId}`,
+      });
+      closeEndCampaignModal(); // Close modal on error so user can see the alert
+    } finally {
+      setActionLoading((prev) => ({ ...prev, [endCampaignModal.campaignId]: false }));
+    }
+  };
+
+  const openEndCampaignModal = (campaignId: string, campaignName: string) => {
+    setEndCampaignModal({ open: true, campaignId, campaignName });
+  };
+
+  const closeEndCampaignModal = () => {
+    setEndCampaignModal({ open: false, campaignId: "", campaignName: "" });
   };
 
   return (
@@ -607,6 +654,18 @@ const EmailAnalytics: React.FC<EmailAnalyticsProps> = () => {
                                       )}
                                     </>
                                   )}
+
+                                  {/* End Campaign Button - Available for all statuses */}
+                                  <Tooltip title="End Campaign">
+                                    <IconButton
+                                      size="small"
+                                      color="error"
+                                      onClick={() => openEndCampaignModal(campaign.campaignId, campaign.subject)}
+                                      disabled={actionLoading[campaign.campaignId]}
+                                    >
+                                      <Block />
+                                    </IconButton>
+                                  </Tooltip>
                                 </Box>
                               </TableCell>
                             </TableRow>
@@ -632,6 +691,47 @@ const EmailAnalytics: React.FC<EmailAnalyticsProps> = () => {
           </Box>
         </CardContent>
       </Card>
+
+      {/* End Campaign Confirmation Modal */}
+      <Dialog
+        open={endCampaignModal.open}
+        onClose={closeEndCampaignModal}
+        maxWidth="sm"
+        fullWidth
+        sx={{ zIndex: 999999 }}
+      >
+        <DialogTitle sx={{ color: "#d32f2f", fontWeight: 600 }}>
+          End Campaign
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            Are you sure you want to end this campaign?
+          </Typography>
+          <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
+            <strong>Campaign:</strong> {endCampaignModal.campaignName}
+          </Typography>
+          <Typography variant="body2" color="error" sx={{ fontWeight: 500 }}>
+            ⚠️ Warning: All campaign data will be lost. You can only see the reports.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={closeEndCampaignModal} color="inherit">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleEndCampaign}
+            color="error"
+            variant="contained"
+            disabled={endCampaignModal.campaignId ? actionLoading[endCampaignModal.campaignId] : false}
+          >
+            {endCampaignModal.campaignId && actionLoading[endCampaignModal.campaignId] ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : (
+              "End Campaign"
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

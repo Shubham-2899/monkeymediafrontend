@@ -74,6 +74,17 @@ export class CampaignService {
     }
   }
 
+  // End a campaign
+  static async endCampaign(campaignId: string): Promise<{ message: string; success: boolean }> {
+    try {
+      const response = await apiPut(`/campaign/${campaignId}/end`, {});
+      return response.data;
+    } catch (error) {
+      console.error('Error ending campaign:', error);
+      throw error as Error;
+    }
+  }
+
   // Cleanup campaign data
   static async cleanupCampaignData(campaignId: string): Promise<{ message: string; success: boolean; deletedCount: number }> {
     try {
