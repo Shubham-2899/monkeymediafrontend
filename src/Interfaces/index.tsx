@@ -182,3 +182,21 @@ export interface CleanupStatusResponse {
   trackingDataCount: number;
   needsCleanup: boolean;
 }
+
+// Server Domains Interfaces
+export interface ServerDomainIp {
+  ip: string;
+  isMainIp: boolean;
+  wentSpam: boolean;
+  provider: string;
+}
+
+export interface ServerDomain {
+  _id: string;
+  domain: string;
+  availableIps: ServerDomainIp[];
+  status: "active" | "inactive";
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
