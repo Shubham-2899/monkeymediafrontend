@@ -20,6 +20,8 @@ import AddEmails from "./pages/add-emails";
 import BullMQDashboard from "../bullmq-dashboard";
 import Suppression from "./pages/suppression";
 import EmailAnalytics from "../../components/EmailAnalytics";
+import ServerDomains from "./pages/server-domains";
+import DnsIcon from "@mui/icons-material/Dns";
 
 const drawerWidth = 240;
 
@@ -29,6 +31,7 @@ const componentMap = {
   "View Queue": <BullMQDashboard />,
   Suppression: <Suppression />,
   Analytics: <EmailAnalytics />,
+  "Server Domains": <ServerDomains />,
 };
 
 type ComponentKey = keyof typeof componentMap;
@@ -47,6 +50,8 @@ const getIcon = (componentName: string) => {
       return <CampaignIcon />;
     case "Analytics":
       return <AnalyticsIcon />;
+    case "Server Domains":
+      return <DnsIcon />;
     default:
       return <InboxIcon />;
   }

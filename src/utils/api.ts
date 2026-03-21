@@ -108,3 +108,36 @@ export const apiPut = async (
     handleApiError(error as AxiosError, url);
   }
 };
+
+export const apiDelete = async (
+  url: string,
+  customBaseUrl?: string,
+  additionalHeaders: ApiHeaders = {}
+): Promise<any> => {
+  const api = createApiInstance(customBaseUrl);
+  const headers = { ...getAuthHeaders(), ...additionalHeaders };
+
+  try {
+    const response = await api.delete(url, { headers });
+    return response;
+  } catch (error) {
+    handleApiError(error as AxiosError, url);
+  }
+};
+
+export const apiPatch = async (
+  url: string,
+  data: any,
+  customBaseUrl?: string,
+  additionalHeaders: ApiHeaders = {}
+): Promise<any> => {
+  const api = createApiInstance(customBaseUrl);
+  const headers = { ...getAuthHeaders(), ...additionalHeaders };
+
+  try {
+    const response = await api.patch(url, data, { headers });
+    return response;
+  } catch (error) {
+    handleApiError(error as AxiosError, url);
+  }
+};
