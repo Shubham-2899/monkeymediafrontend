@@ -80,31 +80,17 @@ const EmailAnalytics: React.FC<EmailAnalyticsProps> = () => {
       const campaignsData = await CampaignService.getAllCampaigns();
       setCampaigns(campaignsData);
 
-      // Fetch stats for each campaign
-      const statsPromises = campaignsData.map(async (campaign) => {
-        try {
-          const stats = await CampaignService.getCampaignStats(
-            campaign.campaignId
-          );
-          return { campaignId: campaign.campaignId, stats };
-        } catch (error) {
-          console.error(
-            `Error fetching stats for campaign ${campaign.campaignId}:`,
-            error
-          );
-          return { campaignId: campaign.campaignId, stats: null };
-        }
-      });
-
-      const statsResults = await Promise.all(statsPromises);
+      // Build stats map from embedded stats in getAllCampaigns response — no N+1
       const statsMap: Record<string, CampaignStats> = {};
-
-      statsResults.forEach((result) => {
-        if (result.stats) {
-          statsMap[result.campaignId] = result.stats;
+      (campaignsData as Array<Campaign & { stats?: CampaignStats['counts'] }>).forEach((campaign) => {
+        if (campaign.stats) {
+          statsMap[campaign.campaignId] = {
+            campaignId: campaign.campaignId,
+            status: campaign.status,
+            counts: campaign.stats,
+          };
         }
       });
-
       setCampaignStats(statsMap);
     } catch (error) {
       console.error("Error fetching analytics:", error);
