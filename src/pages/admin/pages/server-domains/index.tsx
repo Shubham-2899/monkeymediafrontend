@@ -4,7 +4,7 @@ import {
   CircularProgress, Snackbar, Alert, Dialog, DialogTitle,
   DialogContent, DialogActions, TextField, MenuItem, Switch,
   FormControlLabel, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Paper, Collapse, Divider,
+  TableHead, TableRow, Paper, Collapse, Divider, Select, SelectChangeEvent,
 } from "@mui/material";
 import DnsIcon from "@mui/icons-material/Dns";
 import AddIcon from "@mui/icons-material/Add";
@@ -14,6 +14,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { apiGet, apiPost, apiPut, apiDelete, apiPatch } from "../../../../utils/api";
 import { ServerDomain, ServerDomainIp } from "../../../../Interfaces";
 
@@ -56,6 +57,17 @@ const IpRows: React.FC<{
   const [newIp, setNewIp] = useState(emptyIp());
   const [saving, setSaving] = useState(false);
   const [confirm, setConfirm] = useState<{ type: "delete" | "spam"; ip: string; current?: boolean } | null>(null);
+  const [warmingUpdating, setWarmingUpdating] = useState<string | null>(null); // ip being updated
+
+  const handleWarmingChange = async (ip: string, warmingStatus: string) => {
+    setWarmingUpdating(ip);
+    try {
+      await apiPut(`/servers-domains/${serverId}/ips/${ip}`, { warmingStatus });
+      onSnackbar(`Warming status updated to "${warmingStatus}".`, "success");
+      onRefresh();
+    } catch { onSnackbar("Failed to update warming status.", "error"); }
+    finally { setWarmingUpdating(null); }
+  };
 
   const handleAdd = async () => {
     if (!newIp.ip || !newIp.provider) { onSnackbar("IP and provider are required.", "error"); return; }
@@ -109,6 +121,14 @@ const IpRows: React.FC<{
               <TableCell>IP Address</TableCell>
               <TableCell>Provider</TableCell>
               <TableCell>Type</TableCell>
+              <TableCell>
+                <Stack direction="row" spacing={0.5} alignItems="center">
+                  <Typography variant="inherit">Warming</Typography>
+                  <Tooltip title="cold → warming → warmed. Only 'warmed' IPs are included in round-robin sending." arrow placement="top">
+                    <InfoOutlinedIcon sx={{ fontSize: 14, color: "#9e9e9e", cursor: "help" }} />
+                  </Tooltip>
+                </Stack>
+              </TableCell>
               <TableCell>Spam Status</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
@@ -130,6 +150,28 @@ const IpRows: React.FC<{
                     variant="outlined"
                     sx={{ fontWeight: 500, fontSize: 11 }}
                   />
+                </TableCell>
+                <TableCell>
+                  <Select
+                    size="small"
+                    value={entry.warmingStatus || 'cold'}
+                    disabled={warmingUpdating === entry.ip}
+                    onChange={(e: SelectChangeEvent) => handleWarmingChange(entry.ip, e.target.value)}
+                    sx={{
+                      fontSize: 12,
+                      minWidth: 110,
+                      '& .MuiSelect-select': { py: 0.5 },
+                      color: entry.warmingStatus === 'warmed'
+                        ? '#2e7d32'
+                        : entry.warmingStatus === 'warming'
+                          ? '#e65100'
+                          : '#666',
+                    }}
+                  >
+                    <MenuItem value="cold" sx={{ fontSize: 12 }}>❄️ Cold</MenuItem>
+                    <MenuItem value="warming" sx={{ fontSize: 12 }}>🔥 Warming</MenuItem>
+                    <MenuItem value="warmed" sx={{ fontSize: 12 }}>✅ Warmed</MenuItem>
+                  </Select>
                 </TableCell>
                 <TableCell>
                   {entry.wentSpam ? (
@@ -160,7 +202,7 @@ const IpRows: React.FC<{
             ))}
             {ips.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
+                <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
                   <Typography variant="body2" color="text.disabled">No IPs configured for this server.</Typography>
                 </TableCell>
               </TableRow>
