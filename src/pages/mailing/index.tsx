@@ -61,7 +61,7 @@ const EmailForm: React.FC = () => {
   const [campaignId, setCampaignId] = useState<string>("");
   const [alert, setAlert] = useState({
     open: false,
-    severity: "success" as "success" | "error",
+    severity: "success" as "success" | "error" | "warning",
     message: "",
   });
   const theme = useTheme();
@@ -69,6 +69,7 @@ const EmailForm: React.FC = () => {
   const location = useLocation();
   const [serverIps, setServerIps] = useState<FormattedData[]>([]);
   const [selectedIp, setSelectedIp] = useState("");
+  const [ipMode, setIpMode] = useState<'single' | 'round-robin'>('single');
   const [campaignStarted, setCampaignStarted] = useState(false);
   const [campaignPaused, setCampaignPaused] = useState(false);
   const [currentJobId, setCurrentJobId] = useState<string>("");
@@ -277,18 +278,21 @@ const EmailForm: React.FC = () => {
         selectedIp,
         batchSize,
         delay,
+        ipMode,
       };
 
       const response = await CampaignService.createCampaign(campaignData);
 
-      if (response.jobId) {
-        setCurrentJobId(response.jobId);
+      if (response.success) {
+        setCurrentJobId(response.jobId || response.mailerId || '');
         setCampaignStarted(true);
         setCampaignPaused(false);
         setAlert({
           open: true,
-          severity: "success",
-          message: `Campaign started successfully! Job ID: ${response.jobId} in the campaign queue.`,
+          severity: response.ipWarning ? "warning" : "success",
+          message: response.ipWarning
+            ? `Campaign started. Note: ${response.ipWarning}`
+            : `Campaign started successfully!${response.jobId ? ` Job ID: ${response.jobId}` : ''}`,
         });
       }
     } catch (error: any) {
@@ -347,6 +351,7 @@ const EmailForm: React.FC = () => {
         selectedIp,
         batchSize,
         delay,
+        ipMode,
       };
 
       const response = await CampaignService.resumeCampaign(campaignData);
@@ -410,6 +415,7 @@ const EmailForm: React.FC = () => {
       setCampaignStarted(false);
       setCampaignPaused(false);
       setCurrentJobId("");
+      setIpMode('single'); // reset to safe default
     }
 
     // If switching to bulk mode and we have a last bulk campaign, restore it
@@ -745,6 +751,48 @@ const EmailForm: React.FC = () => {
                 </RadioGroup>
               </FormControl>
 
+              {/* IP Mode — only relevant for bulk sending */}
+              {mode === "bulk" && (
+                <Box sx={{ mt: 1.5, p: 1.5, background: "#f5f8ff", borderRadius: 1, border: "1px solid #e3eaf7" }}>
+                  <Typography variant="subtitle2" gutterBottom sx={{ color: "#1976d2", fontWeight: 600 }}>
+                    IP Rotation Mode
+                  </Typography>
+                  <RadioGroup
+                    row
+                    value={ipMode}
+                    onChange={(e) => setIpMode(e.target.value as 'single' | 'round-robin')}
+                  >
+                    <Tooltip title="Send all emails from the selected IP only. Use this for test sends and IP warming." arrow>
+                      <FormControlLabel
+                        value="single"
+                        control={<Radio size="small" />}
+                        label={
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                            <Chip label="Single IP" size="small" color="default" variant={ipMode === 'single' ? 'filled' : 'outlined'} />
+                          </Box>
+                        }
+                      />
+                    </Tooltip>
+                    <Tooltip title="Rotate across all warmed IPs on this VPS. Each recipient gets one email, IPs are used in sequence." arrow>
+                      <FormControlLabel
+                        value="round-robin"
+                        control={<Radio size="small" />}
+                        label={
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                            <Chip label="Round Robin" size="small" color="secondary" variant={ipMode === 'round-robin' ? 'filled' : 'outlined'} />
+                          </Box>
+                        }
+                      />
+                    </Tooltip>
+                  </RadioGroup>
+                  <Typography variant="caption" color="text.secondary">
+                    {ipMode === 'round-robin'
+                      ? 'Only warmed IPs will be used. Cold/warming IPs are excluded automatically.'
+                      : 'Only the selected IP above will be used for sending.'}
+                  </Typography>
+                </Box>
+              )}
+
               {/* Mode switching info */}
               {campaignStarted && (mode === "test" || mode === "manual") && (
                 <Alert severity="info" sx={{ mt: 1 }}>
@@ -839,7 +887,7 @@ const EmailForm: React.FC = () => {
           sx={{ mb: 2 }}
         >
           <AlertTitle>
-            {alert.severity === "success" ? "Success" : "Error"}
+            {alert.severity === "success" ? "Success" : alert.severity === "warning" ? "Warning" : "Error"}
           </AlertTitle>
           {alert.message}
         </Alert>

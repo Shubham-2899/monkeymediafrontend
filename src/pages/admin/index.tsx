@@ -21,7 +21,9 @@ import BullMQDashboard from "../bullmq-dashboard";
 import Suppression from "./pages/suppression";
 import EmailAnalytics from "../../components/EmailAnalytics";
 import ServerDomains from "./pages/server-domains";
+import Bounces from "./pages/bounces";
 import DnsIcon from "@mui/icons-material/Dns";
+import BounceIcon from "@mui/icons-material/MarkEmailUnread";
 
 const drawerWidth = 240;
 
@@ -32,6 +34,7 @@ const componentMap = {
   Suppression: <Suppression />,
   Analytics: <EmailAnalytics />,
   "Server Domains": <ServerDomains />,
+  Bounces: <Bounces />,
 };
 
 type ComponentKey = keyof typeof componentMap;
@@ -52,6 +55,8 @@ const getIcon = (componentName: string) => {
       return <AnalyticsIcon />;
     case "Server Domains":
       return <DnsIcon />;
+    case "Bounces":
+      return <BounceIcon />;
     default:
       return <InboxIcon />;
   }

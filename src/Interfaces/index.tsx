@@ -73,6 +73,11 @@ export interface CreateCampaignDto {
   mode: Mode;
   batchSize?: number;
   delay?: number;
+  /**
+   * 'single'      — use only selectedIp (default, safe for test/warming)
+   * 'round-robin' — rotate across all warmed IPs for the domain
+   */
+  ipMode?: 'single' | 'round-robin';
 }
 
 export interface Campaign {
@@ -166,10 +171,12 @@ export interface CampaignResponse {
   message: string;
   success: boolean;
   jobId?: string;
+  mailerId?: string;
   sent?: string[];
   failed?: string[];
   emailSent?: number;
   emailFailed?: number;
+  ipWarning?: string;
 }
 
 export interface CampaignListResponse {
