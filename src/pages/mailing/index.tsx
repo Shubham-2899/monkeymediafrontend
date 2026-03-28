@@ -1,1041 +1,662 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
-  Box,
-  Button,
-  TextField,
-  TextareaAutosize,
-  Typography,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  FormControl,
-  CircularProgress,
-  Grid,
-  useMediaQuery,
-  useTheme,
-  Alert,
-  AlertTitle,
-  Collapse,
-  IconButton,
-  Select,
-  MenuItem,
-  SelectChangeEvent,
-  Tooltip,
-  Card,
-  Chip,
-  LinearProgress,
-  Stack,
+  Box, Button, TextField, TextareaAutosize, Typography, Radio,
+  RadioGroup, FormControlLabel, FormControl, CircularProgress,
+  Grid, Alert, AlertTitle, Collapse,
+  IconButton, Select, MenuItem, SelectChangeEvent, Tooltip,
+  Card, Chip, LinearProgress, Stack, Divider,
 } from "@mui/material";
-
 import CloseIcon from "@mui/icons-material/Close";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import PauseIcon from "@mui/icons-material/Pause";
-import StopIcon from "@mui/icons-material/Stop";
-import {
-  validateEmail,
-  validateEmails,
-} from "../../heplers/UserDataValidation";
-import { CampaignService } from "../../utils/campaignService";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import { useLocation } from "react-router-dom";
-import { Mode } from "../../Interfaces";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import AddIcon from "@mui/icons-material/Add";
 import EmailIcon from "@mui/icons-material/Email";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import { validateEmail, validateEmails } from "../../heplers/UserDataValidation";
+import { CampaignService } from "../../utils/campaignService";
+import { useLocation } from "react-router-dom";
+import { Mode, CampaignStats } from "../../Interfaces";
 
-interface FormattedData {
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface IpOption {
   label: string;
   value: string;
 }
 
-const EmailForm: React.FC = () => {
-  const [from, setFrom] = useState<string>("");
-  const [fromName, setFromName] = useState<string>("");
-  const [delay, setDelay] = useState<number>(10);
-  const [batchSize, setBatchSize] = useState<number>(5);
-  const [subject, setSubject] = useState<string>("");
-  const [to, setTo] = useState<string>("");
-  const [templateType, setTemplateType] = useState<string>("html");
-  const [emailTemplate, setEmailTemplate] = useState<string>("");
-  const [mode, setMode] = useState<Mode>("test");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [offerId, setOfferId] = useState<string>("");
-  const [campaignId, setCampaignId] = useState<string>("");
-  const [alert, setAlert] = useState({
-    open: false,
-    severity: "success" as "success" | "error" | "warning",
-    message: "",
-  });
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const location = useLocation();
-  const [serverIps, setServerIps] = useState<FormattedData[]>([]);
-  const [selectedIp, setSelectedIp] = useState("");
-  const [ipMode, setIpMode] = useState<'single' | 'round-robin'>('single');
-  const [campaignStarted, setCampaignStarted] = useState(false);
-  const [campaignPaused, setCampaignPaused] = useState(false);
-  const [currentJobId, setCurrentJobId] = useState<string>("");
-  const [campaignStats] = useState<{
-    counts?: {
-      total: number;
-      sent: number;
-      failed: number;
-      pending: number;
-    };
-  } | null>(null);
-  const [lastBulkCampaignId, setLastBulkCampaignId] = useState<string>("");
+interface AlertState {
+  open: boolean;
+  severity: "success" | "error" | "warning" | "info";
+  message: string;
+}
 
-  useEffect(() => {
-    getAvailableDomainIpDetails();
+// ─── Component ────────────────────────────────────────────────────────────────
+
+const EmailForm: React.FC = () => {
+  const location = useLocation();
+
+  // ── Shared form fields ──────────────────────────────────────────────────────
+  const [from, setFrom] = useState("");
+  const [fromName, setFromName] = useState("");
+  const [subject, setSubject] = useState("");
+  const [templateType, setTemplateType] = useState("html");
+  const [emailTemplate, setEmailTemplate] = useState("");
+  const [offerId, setOfferId] = useState("");
+  const [campaignId, setCampaignId] = useState("");
+  const [selectedIp, setSelectedIp] = useState("");
+  const [serverIps, setServerIps] = useState<IpOption[]>([]);
+
+  // ── Mode ────────────────────────────────────────────────────────────────────
+  const [mode, setMode] = useState<Mode>("test");
+  const [ipMode, setIpMode] = useState<"single" | "round-robin">("single");
+
+  // ── Test / Manual recipients ────────────────────────────────────────────────
+  const [to, setTo] = useState("");
+
+  // ── Bulk campaign config ────────────────────────────────────────────────────
+  const [batchSize, setBatchSize] = useState(5);
+  const [delay, setDelay] = useState(10);
+
+  // ── Campaign live status (fetched from API, survives refresh) ───────────────
+  const [campaignStats, setCampaignStats] = useState<CampaignStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+
+  // ── UI state ────────────────────────────────────────────────────────────────
+  const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState<AlertState>({ open: false, severity: "success", message: "" });
+
+  const showAlert = (severity: AlertState["severity"], message: string) =>
+    setAlert({ open: true, severity, message });
+
+  // ── Reset form for a new campaign ──────────────────────────────────────────
+  const handleNewCampaign = () => {
+    // Warn if a campaign is currently active
+    if (isActive) {
+      showAlert(
+        "warning",
+        `Campaign "${campaignId}" is still ${campaignStatus}. Clearing the form won't stop it — manage it from the Analytics page.`,
+      );
+    }
+    setFrom("");
+    setFromName("");
+    setSubject("");
+    setEmailTemplate("");
+    setTemplateType("html");
+    setOfferId("");
+    setCampaignId("");
+    setTo("");
+    setMode("test");
+    setIpMode("single");
+    setCampaignStats(null);
+    setAlert({ open: false, severity: "success", message: "" });
+  };
+
+  // ── Derived campaign status from API ───────────────────────────────────────
+  const campaignStatus = campaignStats?.status ?? null;
+  const isRunning = campaignStatus === "running";
+  const isPaused = campaignStatus === "paused";
+  const isActive = isRunning || isPaused;
+
+  // ── Fetch campaign stats ────────────────────────────────────────────────────
+  const fetchCampaignStats = useCallback(async (id: string) => {
+    if (!id) return;
+    setStatsLoading(true);
+    try {
+      const stats = await CampaignService.getCampaignStats(id);
+      setCampaignStats(stats);
+    } catch {
+      // silently ignore — campaign may not exist yet
+      setCampaignStats(null);
+    } finally {
+      setStatsLoading(false);
+    }
   }, []);
 
+  // Re-fetch stats when campaignId changes (with debounce)
   useEffect(() => {
-    // Pre-populate from localStorage if coming from analytics
-    const params = new URLSearchParams(location.search);
-    if (params.get("fromAnalytics")) {
-      const stored = localStorage.getItem("prepopulateMailingCampaign");
-      if (stored) {
-        try {
-          const data = JSON.parse(stored);
-          setFrom(data.from || "");
-          setFromName(data.fromName || "");
-          setSubject(data.subject || "");
-          setEmailTemplate(decodeURIComponent(data.emailTemplate || ""));
-          setTemplateType(data.templateType || "html");
-          setOfferId(data.offerId || "");
-          setSelectedIp(data.selectedIp || "");
-          setCampaignId(data.campaignId || "");
-          setBatchSize(data.batchSize || 5);
-          setDelay(data.delay || 5);
-          setMode("bulk");
-          // setCampaignStatus(data.status || null); // No longer needed
-        } catch (e) {
-          // fallback: clear
-          // setCampaignStatus(null); // No longer needed
-        }
+    if (!campaignId) { setCampaignStats(null); return; }
+    const t = setTimeout(() => fetchCampaignStats(campaignId), 600);
+    return () => clearTimeout(t);
+  }, [campaignId, fetchCampaignStats]);
+
+  // ── Load available IPs ──────────────────────────────────────────────────────
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await CampaignService.getAvailableIps();
+        const domainIp = res.domainIp as Record<string, string[]>;
+        const options: IpOption[] = Object.entries(domainIp).flatMap(([key, ips]) =>
+          ips.map((ip) => ({ label: `${key} - ${ip}`, value: `${key} - ${ip}` }))
+        );
+        setServerIps(options);
+        if (options.length > 0) setSelectedIp(options[0].value);
+      } catch (err) {
+        console.error("Error fetching IPs:", err);
       }
-    }
+    })();
+  }, []);
+
+  // ── Pre-populate from analytics ─────────────────────────────────────────────
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (!params.get("fromAnalytics")) return;
+    const stored = localStorage.getItem("prepopulateMailingCampaign");
+    if (!stored) return;
+    try {
+      const data = JSON.parse(stored);
+      setFrom(data.from || "");
+      setFromName(data.fromName || "");
+      setSubject(data.subject || "");
+      setEmailTemplate(decodeURIComponent(data.emailTemplate || ""));
+      setTemplateType(data.templateType || "html");
+      setOfferId(data.offerId || "");
+      setSelectedIp(data.selectedIp || "");
+      setCampaignId(data.campaignId || "");
+      setBatchSize(data.batchSize || 5);
+      setDelay(data.delay || 10);
+      setMode("bulk");
+    } catch { /* ignore */ }
   }, [location.search]);
 
-  const getAvailableDomainIpDetails = async () => {
-    try {
-      const res = await CampaignService.getAvailableIps();
-      const domainIp = res.domainIp as Record<string, string[]>;
-
-      const formattedData: FormattedData[] = Object.entries(domainIp).flatMap(
-        ([key, ips]) =>
-          ips.map((ip: string) => ({
-            label: `${key} - ${ip}`,
-            value: `${key} - ${ip}`,
-          }))
-      );
-
-      setServerIps(formattedData);
-      if (formattedData.length > 0) {
-        setSelectedIp(formattedData[0].value);
-      }
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        console.error("Error while fetching available IPs:", err.message);
-      } else {
-        console.error("Error while fetching available IPs:", err);
-      }
-    }
-  };
-
-  const handlePreview = () => {
-    const newWindow = window.open();
-    if (newWindow) {
-      newWindow.document.write(emailTemplate);
-      newWindow.document.close();
-    }
-  };
-
-  const validateForm = () => {
-    if (
-      !from ||
-      !fromName ||
-      !subject ||
-      !emailTemplate ||
-      !offerId ||
-      !campaignId
-    ) {
-      setAlert({
-        open: true,
-        severity: "error",
-        message: "Please fill in all required fields.",
-      });
+  // ── Validation ──────────────────────────────────────────────────────────────
+  const validateSharedFields = (): boolean => {
+    if (!from || !fromName || !subject || !emailTemplate || !offerId || !campaignId) {
+      showAlert("error", "Please fill in all required fields.");
       return false;
     }
-
     if (validateEmail(from)) {
-      setAlert({
-        open: true,
-        severity: "error",
-        message: "Please enter a valid from email address",
-      });
+      showAlert("error", "Please enter a valid from email address.");
       return false;
     }
-
-    const toEmails = validateEmails(to);
-    if ((mode === "test" || mode === "manual") && toEmails.length === 0) {
-      setAlert({
-        open: true,
-        severity: "error",
-        message: "Please enter at least one valid recipient email",
-      });
-      return false;
-    }
-
     return true;
   };
 
-  const handleSend = async () => {
-    if (!validateForm()) return;
+  const validateRecipients = (): string[] | null => {
+    const emails = validateEmails(to);
+    if (emails.length === 0) {
+      showAlert("error", "Please enter at least one valid recipient email.");
+      return null;
+    }
+    return emails;
+  };
+
+  // ── Preview ─────────────────────────────────────────────────────────────────
+  const handlePreview = () => {
+    const w = window.open();
+    if (w) { w.document.write(emailTemplate); w.document.close(); }
+  };
+
+  // ── Mode 1: Test ─────────────────────────────────────────────────────────────
+  const handleSendTest = async () => {
+    if (!validateSharedFields()) return;
+    const toEmails = validateRecipients();
+    if (!toEmails) return;
 
     setLoading(true);
     try {
-      const toEmails = validateEmails(to);
-      const encodedEmailTemplate = encodeURIComponent(emailTemplate);
-
-      const campaignData = {
-        campaignId,
-        from,
-        fromName,
-        subject,
+      const response = await CampaignService.createCampaign({
+        campaignId, from, fromName, subject,
         to: toEmails,
         templateType: templateType as "html" | "plain",
-        emailTemplate: encodedEmailTemplate,
-        mode: mode,
-        offerId,
-        selectedIp,
-        batchSize,
-        delay,
-      };
-
-      const response = await CampaignService.createCampaign(campaignData);
-
-      // const message =
-      //   mode === "test"
-      //     ? `${response.emailSent} Emails sent successfully!${
-      //         response.emailFailed ? `\n${response.emailFailed} failed.` : ""
-      //       }`
-      //     : `Emails were successfully added to the sending job (Job ID: ${response?.jobId}) in the email queue.`;
-
-      const message =
-        mode === "test" ? (
-          <>
-            <div>{response?.emailSent} Emails sent successfully!</div>
-            {response?.emailFailed && response?.emailFailed > 0 && (
-              <div>{response.emailFailed} failed.</div>
-            )}
-          </>
-        ) : (
-          <div>
-            Emails were successfully added to the sending job (Job ID:{" "}
-            {response?.jobId}) in the email queue.
-          </div>
-        );
-      setAlert({
-        open: true,
-        severity: "success",
-        message: message as unknown as string,
+        emailTemplate: encodeURIComponent(emailTemplate),
+        mode: "test",
+        offerId, selectedIp, batchSize, delay,
       });
-
-      if (mode === "bulk" && response.jobId) {
-        setCurrentJobId(response.jobId);
-        setCampaignStarted(true);
-        setCampaignPaused(false);
-        setLastBulkCampaignId(campaignId);
-      }
-    } catch (error) {
-      console.error("Error sending email:", error);
-      setAlert({
-        open: true,
-        severity: "error",
-        message: "Failed to send emails. Please try again.",
-      });
+      showAlert(
+        "success",
+        `${response.emailSent ?? 0} email(s) sent successfully${response.emailFailed ? `, ${response.emailFailed} failed` : ""}.`,
+      );
+    } catch (err: unknown) {
+      showAlert("error", ((err as {response?: {data?: {message?: string}}})?.response?.data?.message) ?? "Failed to send test emails.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleStartCampaign = async () => {
-    if (!validateForm()) return;
+  // ── Mode 2: Manual ───────────────────────────────────────────────────────────
+  const handleSendManual = async () => {
+    if (!validateSharedFields()) return;
+    const toEmails = validateRecipients();
+    if (!toEmails) return;
 
     setLoading(true);
     try {
-      const encodedEmailTemplate = encodeURIComponent(emailTemplate);
-
-      const campaignData = {
-        campaignId,
-        from,
-        fromName,
-        subject,
-        to: [], // Empty array for bulk mode - emails are already in the system
+      const response = await CampaignService.createCampaign({
+        campaignId, from, fromName, subject,
+        to: toEmails,
         templateType: templateType as "html" | "plain",
-        emailTemplate: encodedEmailTemplate,
-        mode: "bulk" as const,
-        offerId,
-        selectedIp,
-        batchSize,
-        delay,
-        ipMode,
-      };
-
-      const response = await CampaignService.createCampaign(campaignData);
-
-      if (response.success) {
-        setCurrentJobId(response.jobId || response.mailerId || '');
-        setCampaignStarted(true);
-        setCampaignPaused(false);
-        setAlert({
-          open: true,
-          severity: response.ipWarning ? "warning" : "success",
-          message: response.ipWarning
-            ? `Campaign started. Note: ${response.ipWarning}`
-            : `Campaign started successfully!${response.jobId ? ` Job ID: ${response.jobId}` : ''}`,
-        });
-      }
-    } catch (error: any) {
-      console.error("Error starting campaign:", error);
-      setAlert({
-        open: true,
-        severity: "error",
-        message: error.response.data.message ?? 'Failed to start the campaign. Please try again.',
+        emailTemplate: encodeURIComponent(emailTemplate),
+        mode: "manual",
+        offerId, selectedIp, batchSize, delay,
       });
+      showAlert("success", `Manual send queued. Job ID: ${response.jobId ?? "—"}`);
+    } catch (err: unknown) {
+      showAlert("error", ((err as {response?: {data?: {message?: string}}})?.response?.data?.message) ?? "Failed to queue manual send.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePauseCampaign = async () => {
-    if (!campaignId) return;
+  // ── Mode 3: Bulk — Start ─────────────────────────────────────────────────────
+  const handleStartCampaign = async () => {
+    if (!validateSharedFields()) return;
 
+    setLoading(true);
+    try {
+      const response = await CampaignService.createCampaign({
+        campaignId, from, fromName, subject,
+        to: [],
+        templateType: templateType as "html" | "plain",
+        emailTemplate: encodeURIComponent(emailTemplate),
+        mode: "bulk",
+        offerId, selectedIp, batchSize, delay, ipMode,
+      });
+
+      if (response.success) {
+        showAlert(
+          response.ipWarning ? "warning" : "success",
+          response.ipWarning
+            ? `Campaign started. Note: ${response.ipWarning}`
+            : `Campaign started successfully.`,
+        );
+        await fetchCampaignStats(campaignId);
+      }
+    } catch (err: unknown) {
+      showAlert("error", ((err as {response?: {data?: {message?: string}}})?.response?.data?.message) ?? "Failed to start campaign.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Mode 3: Bulk — Pause ─────────────────────────────────────────────────────
+  const handlePauseCampaign = async () => {
     setLoading(true);
     try {
       await CampaignService.pauseCampaign(campaignId);
-      setCampaignPaused(true);
-      setAlert({
-        open: true,
-        severity: "success",
-        message: "Campaign paused successfully.",
-      });
-    } catch (error) {
-      console.error("Error pausing campaign:", error);
-      setAlert({
-        open: true,
-        severity: "error",
-        message: "Failed to pause campaign.",
-      });
+      showAlert("success", "Campaign paused.");
+      await fetchCampaignStats(campaignId);
+    } catch {
+      showAlert("error", "Failed to pause campaign.");
     } finally {
       setLoading(false);
     }
   };
 
+  // ── Mode 3: Bulk — Resume ────────────────────────────────────────────────────
   const handleResumeCampaign = async () => {
-    if (!validateForm()) return;
+    if (!validateSharedFields()) return;
 
     setLoading(true);
     try {
-      const encodedEmailTemplate = encodeURIComponent(emailTemplate);
-
-      const campaignData = {
-        campaignId,
-        from,
-        fromName,
-        subject,
-        to: [], // Empty array for bulk mode - emails are already in the system
+      const response = await CampaignService.resumeCampaign({
+        campaignId, from, fromName, subject,
+        to: [],
         templateType: templateType as "html" | "plain",
-        emailTemplate: encodedEmailTemplate,
-        mode: "bulk" as const,
-        offerId,
-        selectedIp,
-        batchSize,
-        delay,
-        ipMode,
-      };
+        emailTemplate: encodeURIComponent(emailTemplate),
+        mode: "bulk",
+        offerId, selectedIp, batchSize, delay, ipMode,
+      });
 
-      const response = await CampaignService.resumeCampaign(campaignData);
-
-      if (response.jobId) {
-        setCurrentJobId(response.jobId);
-        setCampaignPaused(false);
-        setAlert({
-          open: true,
-          severity: "success",
-          message: "Campaign resumed successfully.",
-        });
+      if (response.success) {
+        showAlert(
+          response.ipWarning ? "warning" : "success",
+          response.ipWarning ? `Campaign resumed. Note: ${response.ipWarning}` : "Campaign resumed.",
+        );
+        await fetchCampaignStats(campaignId);
       }
-    } catch (error) {
-      console.error("Error resuming campaign:", error);
-      setAlert({
-        open: true,
-        severity: "error",
-        message: "Failed to resume campaign.",
-      });
+    } catch (err: unknown) {
+      showAlert("error", ((err as {response?: {data?: {message?: string}}})?.response?.data?.message) ?? "Failed to resume campaign.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleStopJob = async () => {
-    if (!currentJobId) return;
-
-    setLoading(true);
-    try {
-      await CampaignService.stopJob(currentJobId);
-      setCampaignStarted(false);
-      setCampaignPaused(false);
-      setCurrentJobId("");
-      setAlert({
-        open: true,
-        severity: "success",
-        message: "Campaign stopped successfully.",
-      });
-    } catch (error) {
-      console.error("Error stopping job:", error);
-      setAlert({
-        open: true,
-        severity: "error",
-        message: "Failed to stop campaign.",
-      });
-    } finally {
-      setLoading(false);
-    }
+  // ── Progress ─────────────────────────────────────────────────────────────────
+  const getProgress = () => {
+    const c = campaignStats?.counts;
+    if (!c || c.total === 0) return 0;
+    return ((c.sent + c.failed) / c.total) * 100;
   };
 
-  const handleChange = (event: SelectChangeEvent<string>) => {
-    setSelectedIp(event.target.value);
-  };
-
-  const handleModeChange = (newMode: string) => {
-    setMode(newMode as Mode);
-
-    // If switching to test/manual mode and we have a last bulk campaign, clear the campaign state
-    if ((newMode === "test" || newMode === "manual") && lastBulkCampaignId) {
-      setCampaignStarted(false);
-      setCampaignPaused(false);
-      setCurrentJobId("");
-      setIpMode('single'); // reset to safe default
-    }
-
-    // If switching to bulk mode and we have a last bulk campaign, restore it
-    if (newMode === "bulk" && lastBulkCampaignId && !campaignId) {
-      setCampaignId(lastBulkCampaignId);
-    }
-  };
-
-  const getProgressPercentage = () => {
-    if (!campaignStats || !campaignStats.counts) return 0;
-    const total = campaignStats.counts.total;
-    const sent = campaignStats.counts.sent;
-    const failed = campaignStats.counts.failed;
-    return total > 0 ? ((sent + failed) / total) * 100 : 0;
-  };
-
+  // ─── Render ──────────────────────────────────────────────────────────────────
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        p: { xs: 1, sm: 3 },
-        background: "#fafafa",
-      }}
-    >
-      {/* Consistent Header */}
-      <Box
-        sx={{
-          pb: 1,
-          // background: "#fff",
-          color: "#333",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          borderBottom: "1px solid #e0e0e0",
-          width: "100%",
-          gap: 2,
-          mb: 3,
-        }}
-      >
+    <Box sx={{ minHeight: "100vh", p: { xs: 1, sm: 3 }, background: "#fafafa" }}>
+
+      {/* Header */}
+      <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between"
+        pb={1} mb={3} sx={{ borderBottom: "1px solid #e0e0e0" }}>
         <Stack direction="row" spacing={2} alignItems="center">
           <EmailIcon sx={{ fontSize: 32, color: "#1976d2" }} />
           <Box>
-            <Typography variant="h5" fontWeight={600} color="#333">
-              Mailing
-            </Typography>
-            <Typography variant="body2" sx={{ color: "#666" }}>
-              Create and send email campaigns
-            </Typography>
+            <Typography variant="h5" fontWeight={600} color="#333">Mailing</Typography>
+            <Typography variant="body2" color="#666">Create and send email campaigns</Typography>
           </Box>
         </Stack>
-      </Box>
-      <Grid container spacing={2} justifyContent="center">
+        <Tooltip title="Clear all form fields and start fresh for a new campaign" arrow>
+          <Button variant="outlined" size="small" startIcon={<AddIcon />}
+            onClick={handleNewCampaign} sx={{ textTransform: "none", borderRadius: 2 }}>
+            New Campaign
+          </Button>
+        </Tooltip>
+      </Stack>
+
+      <Grid container spacing={2}>
+
+        {/* ── Left column: IP selector ── */}
         <Grid item xs={12} sm={3}>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "10px",
-            }}
-          >
-            <Typography variant="h6">Select Server IP</Typography>
+          <Stack spacing={1.5}>
+            <Typography variant="subtitle2" fontWeight={600}>Server IP</Typography>
             <Select
               value={selectedIp || serverIps[0]?.value || ""}
-              onChange={handleChange}
-              displayEmpty
-              fullWidth
+              onChange={(e: SelectChangeEvent) => setSelectedIp(e.target.value)}
+              displayEmpty fullWidth size="small"
             >
               {serverIps.map((ip) => (
-                <MenuItem key={ip.value} value={ip.value}>
-                  {ip.label}
-                </MenuItem>
+                <MenuItem key={ip.value} value={ip.value}>{ip.label}</MenuItem>
               ))}
             </Select>
-          </Box>
+          </Stack>
         </Grid>
 
+        {/* ── Centre column: email form ── */}
         <Grid item xs={12} sm={6}>
           <Card sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Email Campaign Form
-            </Typography>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: !isMobile ? "row" : "column",
-                gap: "15px",
-                flexWrap: "wrap",
-              }}
-            >
-              <TextField
-                label="From Email"
-                value={from}
-                onChange={(e) => setFrom(e.target.value)}
-                placeholder="Enter sender's email"
-                sx={{ width: !isMobile ? "48%" : "100%" }}
-                size="small"
-              />
-              <TextField
-                label="From Name"
-                value={fromName}
-                onChange={(e) => setFromName(e.target.value)}
-                placeholder="Enter sender's name"
-                sx={{ width: !isMobile ? "48%" : "100%" }}
-                size="small"
-              />
-              <TextField
-                label="Subject"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder="Enter email subject"
-                sx={{ width: "100%" }}
-                size="small"
-              />
+            <Typography variant="h6" gutterBottom>Email Details</Typography>
+            <Stack spacing={1.5}>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
+                <TextField label="From Email" value={from} size="small" fullWidth
+                  onChange={(e) => setFrom(e.target.value)} placeholder="sender@domain.com" />
+                <TextField label="From Name" value={fromName} size="small" fullWidth
+                  onChange={(e) => setFromName(e.target.value)} placeholder="Sender Name" />
+              </Stack>
+              <TextField label="Subject" value={subject} size="small" fullWidth
+                onChange={(e) => setSubject(e.target.value)} />
 
-              <TextareaAutosize
-                minRows={4}
-                value={to}
-                onChange={(e) => setTo(e.target.value)}
-                placeholder="Enter recipient's emails, separated by commas"
-                style={{ width: "100%", padding: "10px" }}
-              />
-
-              <Box sx={{ display: "flex", gap: "25px", flexWrap: "wrap" }}>
-                <FormControl component="fieldset">
-                  <Typography>Email Template Type:</Typography>
-                  <RadioGroup
-                    row
-                    value={templateType}
-                    onChange={(e) => setTemplateType(e.target.value)}
-                  >
-                    <FormControlLabel
-                      value="plain"
-                      control={<Radio />}
-                      label="Plain"
-                    />
-                    <FormControlLabel
-                      value="html"
-                      control={<Radio />}
-                      label="HTML"
-                    />
-                  </RadioGroup>
-                </FormControl>
-                <div style={{ alignSelf: "center" }}>
-                  <Button
-                    variant="contained"
-                    color="success"
-                    onClick={handlePreview}
-                    sx={{ mr: "20px" }}
-                    size="small"
-                  >
-                    Preview
-                  </Button>
-                </div>
-              </Box>
-
-              <TextareaAutosize
-                maxRows={10}
-                value={emailTemplate}
-                onChange={(e) => setEmailTemplate(e.target.value)}
-                placeholder={`Enter ${templateType} email template`}
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                }}
-                minRows={4}
-              />
-            </Box>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={3}>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "10px",
-            }}
-          >
-            <TextField
-              label="Offer ID"
-              value={offerId}
-              onChange={(e) => setOfferId(e.target.value)}
-              placeholder="Enter Offer ID"
-              required
-              size="small"
-            />
-            <Box
-              display="flex"
-              alignItems="center"
-              gap={1}
-              sx={{ position: "relative" }}
-            >
-              <TextField
-                label="Campaign ID"
-                value={campaignId}
-                onChange={(e) => setCampaignId(e.target.value)}
-                placeholder="Enter Campaign ID"
-                size="small"
-                fullWidth
-              />
-              <Tooltip title="Please carefully select the Campaign ID" arrow>
-                <IconButton
-                  size="small"
-                  sx={{
-                    position: "absolute",
-                    right: 1,
-                    top: 0,
-                  }}
-                >
-                  <InfoOutlinedIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </Box>
-
-            <Box
-              display="flex"
-              flexWrap="wrap"
-              justifyContent="space-between"
-              gap={2}
-              sx={{ width: "100%" }}
-            >
-              <Box
-                display="flex"
-                alignItems="center"
-                gap={1}
-                sx={{
-                  position: "relative",
-                  width: !isMobile ? "48%" : "100%",
-                }}
-              >
-                <TextField
-                  label="Delay (seconds)"
-                  value={delay}
-                  onChange={(e) => setDelay(Number(e.target.value))}
-                  placeholder="Enter delay in seconds"
-                  sx={{ width: "100%" }}
-                  size="small"
-                />
-                <Tooltip title="Delay between email batches" arrow>
-                  <IconButton
-                    size="small"
-                    sx={{
-                      position: "absolute",
-                      right: 1,
-                      top: 0,
-                    }}
-                  >
-                    <InfoOutlinedIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-              <Box
-                display="flex"
-                alignItems="center"
-                gap={1}
-                sx={{
-                  position: "relative",
-                  width: !isMobile ? "48%" : "100%",
-                }}
-              >
-                <TextField
-                  label="Batch Size"
-                  value={batchSize}
-                  onChange={(e) => setBatchSize(Number(e.target.value))}
-                  placeholder="Enter batch size"
-                  sx={{ width: isMobile ? "48%" : "100%" }}
-                  size="small"
-                  required
-                />
-                <Tooltip title="Number of emails per batch" arrow>
-                  <IconButton
-                    size="small"
-                    sx={{
-                      position: "absolute",
-                      right: 1,
-                      top: 0,
-                    }}
-                  >
-                    <InfoOutlinedIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            </Box>
-
-            {/* Mode Selection */}
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Campaign Modes:
-              </Typography>
-              <FormControl component="fieldset">
-                <RadioGroup
-                  value={mode}
-                  onChange={(e) => handleModeChange(e.target.value)}
-                >
-                  <FormControlLabel
-                    value="test"
-                    control={<Radio />}
-                    label={
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <Chip label="Test" size="small" color="primary" />
-                        {/* <Typography variant="body2">
-                          Send test emails
-                        </Typography> */}
-                      </Box>
-                    }
-                  />
-                  <FormControlLabel
-                    value="manual"
-                    control={<Radio />}
-                    label={
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <Chip label="Manual" size="small" color="info" />
-                        {/* <Typography variant="body2">Manual send</Typography> */}
-                      </Box>
-                    }
-                  />
-                  <FormControlLabel
-                    value="bulk"
-                    control={<Radio />}
-                    label={
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <Chip label="Bulk" size="small" color="secondary" />
-                        {/* <Typography variant="body2">Bulk campaign</Typography> */}
-                      </Box>
-                    }
-                  />
-                </RadioGroup>
-              </FormControl>
-
-              {/* IP Mode — only relevant for bulk sending */}
-              {mode === "bulk" && (
-                <Box sx={{ mt: 1.5, p: 1.5, background: "#f5f8ff", borderRadius: 1, border: "1px solid #e3eaf7" }}>
-                  <Typography variant="subtitle2" gutterBottom sx={{ color: "#1976d2", fontWeight: 600 }}>
-                    IP Rotation Mode
+              {/* Recipients — only for test and manual */}
+              {(mode === "test" || mode === "manual") && (
+                <Box>
+                  <Typography variant="caption" color="text.secondary" mb={0.5} display="block">
+                    Recipients (comma separated)
                   </Typography>
-                  <RadioGroup
-                    row
-                    value={ipMode}
-                    onChange={(e) => setIpMode(e.target.value as 'single' | 'round-robin')}
-                  >
-                    <Tooltip title="Send all emails from the selected IP only. Use this for test sends and IP warming." arrow>
-                      <FormControlLabel
-                        value="single"
-                        control={<Radio size="small" />}
-                        label={
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                            <Chip label="Single IP" size="small" color="default" variant={ipMode === 'single' ? 'filled' : 'outlined'} />
-                          </Box>
-                        }
-                      />
-                    </Tooltip>
-                    <Tooltip title="Rotate across all warmed IPs on this VPS. Each recipient gets one email, IPs are used in sequence." arrow>
-                      <FormControlLabel
-                        value="round-robin"
-                        control={<Radio size="small" />}
-                        label={
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                            <Chip label="Round Robin" size="small" color="secondary" variant={ipMode === 'round-robin' ? 'filled' : 'outlined'} />
-                          </Box>
-                        }
-                      />
-                    </Tooltip>
-                  </RadioGroup>
-                  <Typography variant="caption" color="text.secondary">
-                    {ipMode === 'round-robin'
-                      ? 'Only warmed IPs will be used. Cold/warming IPs are excluded automatically.'
-                      : 'Only the selected IP above will be used for sending.'}
-                  </Typography>
+                  <TextareaAutosize
+                    minRows={3}
+                    value={to}
+                    onChange={(e) => setTo(e.target.value)}
+                    placeholder="email1@example.com, email2@example.com"
+                    style={{ width: "100%", padding: "8px", fontFamily: "inherit", fontSize: 14, borderRadius: 4, border: "1px solid #ccc", resize: "vertical" }}
+                  />
                 </Box>
               )}
 
-              {/* Mode switching info */}
-              {campaignStarted && (mode === "test" || mode === "manual") && (
-                <Alert severity="info" sx={{ mt: 1 }}>
-                  <Typography variant="body2">
-                    Switched to {mode} mode. You can test deliverability while
-                    your bulk campaign is paused.
-                  </Typography>
-                </Alert>
-              )}
+              {/* Template type + preview */}
+              <Stack direction="row" spacing={2} alignItems="center">
+                <FormControl component="fieldset">
+                  <Typography variant="caption" color="text.secondary">Template Type</Typography>
+                  <RadioGroup row value={templateType} onChange={(e) => setTemplateType(e.target.value)}>
+                    <FormControlLabel value="plain" control={<Radio size="small" />} label="Plain" />
+                    <FormControlLabel value="html" control={<Radio size="small" />} label="HTML" />
+                  </RadioGroup>
+                </FormControl>
+                <Button variant="outlined" size="small" color="success" onClick={handlePreview}
+                  sx={{ textTransform: "none" }}>
+                  Preview
+                </Button>
+              </Stack>
 
-              {lastBulkCampaignId && mode === "bulk" && !campaignStarted && (
-                <Alert severity="info" sx={{ mt: 1 }}>
-                  <Typography variant="body2">
-                    Previous campaign ID restored. You can resume or start a new
-                    campaign.
-                  </Typography>
-                </Alert>
-              )}
+              <Box>
+                <Typography variant="caption" color="text.secondary" mb={0.5} display="block">
+                  Email Template
+                </Typography>
+                <TextareaAutosize
+                  minRows={5} maxRows={12}
+                  value={emailTemplate}
+                  onChange={(e) => setEmailTemplate(e.target.value)}
+                  placeholder={`Enter ${templateType} email template`}
+                  style={{ width: "100%", padding: "8px", fontFamily: "monospace", fontSize: 13, borderRadius: 4, border: "1px solid #ccc", resize: "vertical" }}
+                />
+              </Box>
+            </Stack>
+          </Card>
+        </Grid>
+
+        {/* ── Right column: campaign config + mode ── */}
+        <Grid item xs={12} sm={3}>
+          <Stack spacing={1.5}>
+
+            {/* Offer ID */}
+            <TextField label="Offer ID" value={offerId} size="small" fullWidth
+              onChange={(e) => setOfferId(e.target.value)} placeholder="Enter Offer ID" />
+
+            {/* Campaign ID */}
+            <Box sx={{ position: "relative" }}>
+              <TextField label="Campaign ID" value={campaignId} size="small" fullWidth
+                onChange={(e) => setCampaignId(e.target.value)} placeholder="Enter Campaign ID"
+                InputProps={{
+                  endAdornment: (
+                    <Tooltip title="Must match the campaign ID used when uploading recipients." arrow>
+                      <InfoOutlinedIcon sx={{ fontSize: 16, color: "#9e9e9e", cursor: "help" }} />
+                    </Tooltip>
+                  ),
+                }}
+              />
             </Box>
-          </Box>
+
+            {/* Batch + Delay — only relevant for bulk */}
+            {mode === "bulk" && (
+              <Stack direction="row" spacing={1.5}>
+                <TextField label="Batch Size" type="number" value={batchSize} size="small" fullWidth
+                  onChange={(e) => setBatchSize(Number(e.target.value))}
+                  InputProps={{
+                    endAdornment: (
+                      <Tooltip title="Emails per batch" arrow>
+                        <InfoOutlinedIcon sx={{ fontSize: 14, color: "#9e9e9e" }} />
+                      </Tooltip>
+                    ),
+                  }}
+                />
+                <TextField label="Delay (s)" type="number" value={delay} size="small" fullWidth
+                  onChange={(e) => setDelay(Number(e.target.value))}
+                  InputProps={{
+                    endAdornment: (
+                      <Tooltip title="Seconds between batches" arrow>
+                        <InfoOutlinedIcon sx={{ fontSize: 14, color: "#9e9e9e" }} />
+                      </Tooltip>
+                    ),
+                  }}
+                />
+              </Stack>
+            )}
+
+            <Divider />
+
+            {/* Mode selector */}
+            <Box>
+              <Typography variant="subtitle2" fontWeight={600} gutterBottom>Mode</Typography>
+              <FormControl component="fieldset">
+                <RadioGroup value={mode} onChange={(e) => {
+                  setMode(e.target.value as Mode);
+                  if (e.target.value !== "bulk") setIpMode("single");
+                }}>
+                  <FormControlLabel value="test" control={<Radio size="small" />}
+                    label={<Chip label="Test" size="small" color="primary" variant={mode === "test" ? "filled" : "outlined"} />} />
+                  <FormControlLabel value="manual" control={<Radio size="small" />}
+                    label={<Chip label="Manual" size="small" color="info" variant={mode === "manual" ? "filled" : "outlined"} />} />
+                  <FormControlLabel value="bulk" control={<Radio size="small" />}
+                    label={<Chip label="Bulk" size="small" color="secondary" variant={mode === "bulk" ? "filled" : "outlined"} />} />
+                </RadioGroup>
+              </FormControl>
+            </Box>
+
+            {/* IP Rotation — bulk only */}
+            {mode === "bulk" && (
+              <Box sx={{ p: 1.5, background: "#f5f8ff", borderRadius: 1, border: "1px solid #e3eaf7" }}>
+                <Typography variant="subtitle2" fontWeight={600} color="#1976d2" gutterBottom>
+                  IP Rotation
+                </Typography>
+                <RadioGroup row value={ipMode} onChange={(e) => setIpMode(e.target.value as "single" | "round-robin")}>
+                  <FormControlLabel value="single" control={<Radio size="small" />}
+                    label={<Chip label="Single IP" size="small" variant={ipMode === "single" ? "filled" : "outlined"} />} />
+                  <FormControlLabel value="round-robin" control={<Radio size="small" />}
+                    label={<Chip label="Round Robin" size="small" color="secondary" variant={ipMode === "round-robin" ? "filled" : "outlined"} />} />
+                </RadioGroup>
+                <Typography variant="caption" color="text.secondary">
+                  {ipMode === "round-robin"
+                    ? "Rotates across all warmed IPs. Cold/warming IPs excluded automatically."
+                    : "Uses only the selected IP above."}
+                </Typography>
+              </Box>
+            )}
+
+            {/* Mode descriptions */}
+            {mode === "test" && (
+              <Alert severity="info" sx={{ fontSize: 12 }}>
+                Sends immediately to the recipients above. No tracking. Use to verify SMTP and template.
+              </Alert>
+            )}
+            {mode === "manual" && (
+              <Alert severity="info" sx={{ fontSize: 12 }}>
+                Queues a one-shot send to the recipients above. No pause/resume support.
+              </Alert>
+            )}
+            {mode === "bulk" && (
+              <Alert severity="info" sx={{ fontSize: 12 }}>
+                Sends to pre-loaded recipients for this Campaign ID. Supports pause, resume, and stop.
+              </Alert>
+            )}
+
+          </Stack>
         </Grid>
       </Grid>
 
-      {/* Campaign Status */}
-      {(campaignStarted || campaignPaused) && (
-        <Card sx={{ margin: '24px auto', p: 1, width: "100%", maxWidth: 800 }}>
-          <Typography variant="h6" gutterBottom>
-            Campaign Status
-          </Typography>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-            <Chip
-              label={campaignPaused ? "PAUSED" : "RUNNING"}
-              color={campaignPaused ? "warning" : "success"}
-            />
-            {currentJobId && (
-              <Typography variant="body2">Job ID: {currentJobId}</Typography>
-            )}
-            {lastBulkCampaignId && (
-              <Typography variant="body2" color="textSecondary">
-                Campaign: {lastBulkCampaignId}
-              </Typography>
-            )}
-          </Box>
+      {/* ── Campaign Status Card (bulk only, driven by API) ── */}
+      {mode === "bulk" && campaignId && (
+        <Card variant="outlined" sx={{ mt: 3, p: 2, borderRadius: 2 }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1.5}>
+            <Typography variant="subtitle1" fontWeight={600}>Campaign Status</Typography>
+            <Tooltip title="Refresh status">
+              <IconButton size="small" onClick={() => fetchCampaignStats(campaignId)} disabled={statsLoading}>
+                {statsLoading ? <CircularProgress size={16} /> : <RefreshIcon fontSize="small" />}
+              </IconButton>
+            </Tooltip>
+          </Stack>
 
-          {/* Mode indicator */}
-          <Box sx={{ mb: 2 }}>
-            <Chip
-              label={`Current Mode: ${mode.toUpperCase()}`}
-              color={mode === "test" ? "primary" : "secondary"}
-              size="small"
-            />
-            {campaignPaused && mode === "test" && (
-              <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
-                You can test deliverability while the bulk campaign is paused
-              </Typography>
-            )}
-          </Box>
-
-          {campaignStats && campaignStats.counts && (
-            <Box sx={{ mb: 2 }}>
-              <Box
-                sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
-              >
-                <Typography variant="body2">Progress</Typography>
-                <Typography variant="body2">
-                  {getProgressPercentage().toFixed(1)}%
+          {!campaignStats || campaignStats.status === "unknown" ? (
+            <Typography variant="body2" color="text.secondary">
+              No campaign found for this ID. Start one below.
+            </Typography>
+          ) : (
+            <Stack spacing={1.5}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Chip
+                  label={campaignStatus?.toUpperCase() ?? "—"}
+                  size="small"
+                  color={isRunning ? "success" : isPaused ? "warning" : "default"}
+                  variant="filled"
+                />
+                <Typography variant="body2" color="text.secondary">
+                  Campaign: {campaignId}
                 </Typography>
-              </Box>
-              <LinearProgress
-                variant="determinate"
-                value={getProgressPercentage()}
-                sx={{ height: 8, borderRadius: 4 }}
-              />
-            </Box>
+              </Stack>
+
+              {campaignStats.counts && (
+                <>
+                  <Stack direction="row" spacing={2}>
+                    {[
+                      { label: "Total", value: campaignStats.counts.total, color: "#1976d2" },
+                      { label: "Sent", value: campaignStats.counts.sent, color: "#2e7d32" },
+                      { label: "Failed", value: campaignStats.counts.failed, color: "#c62828" },
+                      { label: "Pending", value: campaignStats.counts.pending, color: "#e65100" },
+                    ].map((s) => (
+                      <Box key={s.label} textAlign="center">
+                        <Typography variant="h6" fontWeight={700} sx={{ color: s.color }}>{s.value}</Typography>
+                        <Typography variant="caption" color="text.secondary">{s.label}</Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                  {campaignStats.counts.total > 0 && (
+                    <Box>
+                      <Stack direction="row" justifyContent="space-between" mb={0.5}>
+                        <Typography variant="caption" color="text.secondary">Progress</Typography>
+                        <Typography variant="caption" color="text.secondary">{getProgress().toFixed(1)}%</Typography>
+                      </Stack>
+                      <LinearProgress variant="determinate" value={getProgress()}
+                        sx={{ height: 6, borderRadius: 3 }} />
+                    </Box>
+                  )}
+                </>
+              )}
+            </Stack>
           )}
         </Card>
       )}
 
-      <Collapse in={alert.open} sx={{ mt: 2, width: "100%" }}>
-        <Alert
-          severity={alert.severity}
+      {/* ── Alert ── */}
+      <Collapse in={alert.open} sx={{ mt: 2 }}>
+        <Alert severity={alert.severity}
           action={
-            <IconButton
-              aria-label="close"
-              color="inherit"
-              size="small"
-              onClick={() => setAlert({ ...alert, open: false })}
-            >
+            <IconButton size="small" onClick={() => setAlert((p) => ({ ...p, open: false }))}>
               <CloseIcon fontSize="inherit" />
             </IconButton>
           }
-          sx={{ mb: 2 }}
         >
           <AlertTitle>
-            {alert.severity === "success" ? "Success" : alert.severity === "warning" ? "Warning" : "Error"}
+            {alert.severity === "success" ? "Success"
+              : alert.severity === "warning" ? "Warning"
+              : alert.severity === "info" ? "Info"
+              : "Error"}
           </AlertTitle>
           {alert.message}
         </Alert>
       </Collapse>
 
-      {/* Action Buttons */}
-      <Box sx={{ mt: 3, display: "flex", justifyContent: "center", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
-        {mode === "test" || mode === "manual" ? (
-          // Test/manual mode buttons
+      {/* ── Action Buttons ── */}
+      <Box sx={{ mt: 3, display: "flex", justifyContent: "center", gap: 2, flexWrap: "wrap" }}>
+
+        {/* Test mode */}
+        {mode === "test" && (
+          <Button variant="contained" color="primary" onClick={handleSendTest}
+            disabled={loading} sx={{ textTransform: "none", minWidth: 140 }}>
+            {loading ? <CircularProgress size={20} color="inherit" /> : "Send Test Email"}
+          </Button>
+        )}
+
+        {/* Manual mode */}
+        {mode === "manual" && (
+          <Button variant="contained" color="info" onClick={handleSendManual}
+            disabled={loading} sx={{ textTransform: "none", minWidth: 140 }}>
+            {loading ? <CircularProgress size={20} color="inherit" /> : "Send Manual Email"}
+          </Button>
+        )}
+
+        {/* Bulk mode */}
+        {mode === "bulk" && (
           <>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSend}
-              disabled={loading}
-            >
-              {loading ? (
-                <CircularProgress size={24} color="inherit" />
-              ) : mode === "manual" ? (
-                "Send Manual Email"
-              ) : (
-                "Send Test Email"
-              )}
-            </Button>
-            {/* Show campaign control buttons if campaign is running/paused */}
-            {campaignStarted && (
-              <Box sx={{ display: "flex", gap: 2 }}>
-                {!campaignPaused ? (
-                  <Button
-                    variant="outlined"
-                    color="warning"
-                    onClick={handlePauseCampaign}
-                    disabled={loading}
-                    startIcon={<PauseIcon />}
-                  >
-                    {loading ? (
-                      <CircularProgress size={20} />
-                    ) : (
-                      "Pause Bulk Campaign"
-                    )}
-                  </Button>
-                ) : (
-                  <Button
-                    variant="contained"
-                    color="success"
-                    onClick={handleResumeCampaign}
-                    disabled={loading}
-                    startIcon={<PlayArrowIcon />}
-                  >
-                    {loading ? (
-                      <CircularProgress size={20} />
-                    ) : (
-                      "Resume Bulk Campaign"
-                    )}
-                  </Button>
-                )}
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={handleStopJob}
-                  disabled={loading}
-                  startIcon={<StopIcon />}
-                >
-                  {loading ? (
-                    <CircularProgress size={20} />
-                  ) : (
-                    "Stop Bulk Campaign"
-                  )}
-                </Button>
-              </Box>
+            {/* Not started or completed/ended — show Start */}
+            {!isActive && (
+              <Button variant="contained" color="primary" onClick={handleStartCampaign}
+                disabled={loading} startIcon={<PlayArrowIcon />}
+                sx={{ textTransform: "none", minWidth: 140 }}>
+                {loading ? <CircularProgress size={20} color="inherit" /> : "Start Campaign"}
+              </Button>
             )}
-          </>
-        ) : (
-          // Bulk mode buttons
-          <>
-            {!campaignStarted ? (
-              <>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleStartCampaign}
-                  disabled={loading}
-                  startIcon={<PlayArrowIcon />}
-                >
-                  {loading ? (
-                    <CircularProgress size={24} color="inherit" />
-                  ) : (
-                    "Start Campaign"
-                  )}
-                </Button>
-                {/* Show resume button if we have a paused campaign */}
-                {campaignPaused && lastBulkCampaignId && (
-                  <Button
-                    variant="outlined"
-                    color="success"
-                    onClick={handleResumeCampaign}
-                    disabled={loading}
-                    startIcon={<PlayArrowIcon />}
-                  >
-                    {loading ? (
-                      <CircularProgress size={20} />
-                    ) : (
-                      "Resume Previous Campaign"
-                    )}
-                  </Button>
-                )}
-              </>
-            ) : (
-              <Box sx={{ display: "flex", gap: 2 }}>
-                {!campaignPaused ? (
-                  <Button
-                    variant="outlined"
-                    color="warning"
-                    onClick={handlePauseCampaign}
-                    disabled={loading}
-                    startIcon={<PauseIcon />}
-                  >
-                    {loading ? (
-                      <CircularProgress size={20} />
-                    ) : (
-                      "Pause Campaign"
-                    )}
-                  </Button>
-                ) : (
-                  <Button
-                    variant="contained"
-                    color="success"
-                    onClick={handleResumeCampaign}
-                    disabled={loading}
-                    startIcon={<PlayArrowIcon />}
-                  >
-                    {loading ? (
-                      <CircularProgress size={20} />
-                    ) : (
-                      "Resume Campaign"
-                    )}
-                  </Button>
-                )}
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={handleStopJob}
-                  disabled={loading}
-                  startIcon={<StopIcon />}
-                >
-                  {loading ? <CircularProgress size={20} /> : "Stop Campaign"}
-                </Button>
-              </Box>
+
+            {/* Running — show Pause only */}
+            {isRunning && (
+              <Button variant="outlined" color="warning" onClick={handlePauseCampaign}
+                disabled={loading} startIcon={<PauseIcon />}
+                sx={{ textTransform: "none" }}>
+                {loading ? <CircularProgress size={20} /> : "Pause"}
+              </Button>
+            )}
+
+            {/* Paused — show Resume only */}
+            {isPaused && (
+              <Button variant="contained" color="success" onClick={handleResumeCampaign}
+                disabled={loading} startIcon={<PlayArrowIcon />}
+                sx={{ textTransform: "none" }}>
+                {loading ? <CircularProgress size={20} color="inherit" /> : "Resume Campaign"}
+              </Button>
             )}
           </>
         )}
