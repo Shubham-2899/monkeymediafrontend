@@ -196,6 +196,7 @@ export interface ServerDomainIp {
   isMainIp: boolean;
   wentSpam: boolean;
   provider: string;
+  warmingStatus: 'cold' | 'warming' | 'warmed';
 }
 
 export interface ServerDomain {
