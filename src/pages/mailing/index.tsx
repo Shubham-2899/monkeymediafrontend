@@ -125,9 +125,16 @@ const EmailForm: React.FC = () => {
     (async () => {
       try {
         const res = await CampaignService.getAvailableIps();
-        const domainIp = res.domainIp as Record<string, string[]>;
-        const options: IpOption[] = Object.entries(domainIp).flatMap(([key, ips]) =>
-          ips.map((ip) => ({ label: `${key} - ${ip}`, value: `${key} - ${ip}` }))
+        const options: IpOption[] = (res.data ?? []).flatMap((server) =>
+          server.availableIps.map((ip) => {
+            const warmingSuffix =
+              ip.warmingStatus === 'warmed' ? '' :
+              ip.warmingStatus === 'warming' ? ' · warming' : ' · cold';
+            return {
+              label: `${server.domain} - ${ip.ip}${warmingSuffix}`,
+              value: `${server.domain} - ${ip.ip}`,
+            };
+          })
         );
         setServerIps(options);
         if (options.length > 0) setSelectedIp(options[0].value);
