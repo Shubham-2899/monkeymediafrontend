@@ -87,16 +87,14 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({
   const fetchServerIps = async () => {
     try {
       const response = await CampaignService.getAvailableIps();
-      const domainIp = response.domainIp as Record<string, string[]>;
-      
-      const formattedIps: ServerIp[] = Object.entries(domainIp).flatMap(
-        ([domain, ips]) =>
-          ips.map((ip: string) => ({
-            label: `${domain} - ${ip}`,
-            value: `${domain} - ${ip}`,
-            domain,
-            ip,
-          }))
+
+      const formattedIps: ServerIp[] = (response.data ?? []).flatMap((server) =>
+        server.availableIps.map((entry) => ({
+          label: `${server.domain} - ${entry.ip}${entry.warmingStatus !== 'warmed' ? ` · ${entry.warmingStatus}` : ''}`,
+          value: `${server.domain} - ${entry.ip}`,
+          domain: server.domain,
+          ip: entry.ip,
+        }))
       );
 
       setServerIps(formattedIps);

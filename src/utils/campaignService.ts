@@ -107,10 +107,20 @@ export class CampaignService {
     }
   }
 
-  // Get available server IPs
-  static async getAvailableIps(): Promise<{ domainIp: Record<string, string[]> }> {
+  // Get available server IPs — reads from ServerDomain collection (warming-status aware)
+  static async getAvailableIps(): Promise<{
+    data: Array<{
+      domain: string;
+      availableIps: Array<{
+        ip: string;
+        isMainIp: boolean;
+        warmingStatus: 'cold' | 'warming' | 'warmed';
+        provider: string;
+      }>;
+    }>;
+  }> {
     try {
-      const response = await apiGet('/availableIps');
+      const response = await apiGet('/servers-domains/selectable-ips');
       return response.data;
     } catch (error) {
       console.error('Error fetching available IPs:', error);
