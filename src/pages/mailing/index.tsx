@@ -57,6 +57,7 @@ const EmailForm: React.FC = () => {
   // ── Bulk campaign config ────────────────────────────────────────────────────
   const [batchSize, setBatchSize] = useState(5);
   const [delay, setDelay] = useState(10);
+  const [checkpointInterval, setCheckpointInterval] = useState<number | ''>('');
 
   // ── Campaign live status (fetched from API, survives refresh) ───────────────
   const [campaignStats, setCampaignStats] = useState<CampaignStats | null>(null);
@@ -258,6 +259,7 @@ const EmailForm: React.FC = () => {
         emailTemplate: encodeURIComponent(emailTemplate),
         mode: "bulk",
         offerId, selectedIp, batchSize, delay, ipMode,
+        ...(checkpointInterval !== '' && { checkpointInterval: Number(checkpointInterval) }),
       });
 
       if (response.success) {
@@ -303,6 +305,7 @@ const EmailForm: React.FC = () => {
         emailTemplate: encodeURIComponent(emailTemplate),
         mode: "bulk",
         offerId, selectedIp, batchSize, delay, ipMode,
+        ...(checkpointInterval !== '' && { checkpointInterval: Number(checkpointInterval) }),
       });
 
       if (response.success) {
@@ -475,6 +478,26 @@ const EmailForm: React.FC = () => {
               </Stack>
             )}
 
+            {/* Checkpoint interval — bulk only, optional */}
+            {mode === "bulk" && (
+              <TextField
+                label="Deliverability Check Interval"
+                type="number"
+                value={checkpointInterval}
+                size="small"
+                fullWidth
+                placeholder="500"
+                onChange={(e) => setCheckpointInterval(e.target.value === '' ? '' : Number(e.target.value))}
+                InputProps={{
+                  endAdornment: (
+                    <Tooltip title="Pause and run inbox check every N emails sent. Leave blank for default (500)." arrow>
+                      <InfoOutlinedIcon sx={{ fontSize: 14, color: "#9e9e9e" }} />
+                    </Tooltip>
+                  ),
+                }}
+              />
+            )}
+
             <Divider />
 
             {/* Mode selector */}
@@ -565,6 +588,18 @@ const EmailForm: React.FC = () => {
                   Campaign: {campaignId}
                 </Typography>
               </Stack>
+
+              {/* Checkpoint status indicators */}
+              {campaignStats.checkpointStatus === 'checking' && (
+                <Alert severity="info" sx={{ py: 0.5, fontSize: 12 }}>
+                  Deliverability check in progress…
+                </Alert>
+              )}
+              {isPaused && campaignStats.checkpointStatus === 'spam' && (
+                <Alert severity="error" sx={{ py: 0.5, fontSize: 12 }}>
+                  Paused — Spam detected in deliverability check. Fix your template and resume.
+                </Alert>
+              )}
 
               {campaignStats.counts && (
                 <>
