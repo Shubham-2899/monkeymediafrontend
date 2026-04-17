@@ -13,10 +13,12 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import AddIcon from "@mui/icons-material/Add";
 import EmailIcon from "@mui/icons-material/Email";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import CodeIcon from "@mui/icons-material/Code";
 import { validateEmail, validateEmails } from "../../heplers/UserDataValidation";
 import { CampaignService } from "../../utils/campaignService";
 import { useLocation } from "react-router-dom";
 import { Mode, CampaignStats } from "../../Interfaces";
+import TemplateBuilder from "../../components/TemplateBuilder";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -57,6 +59,7 @@ const EmailForm: React.FC = () => {
   // ── Bulk campaign config ────────────────────────────────────────────────────
   const [batchSize, setBatchSize] = useState(5);
   const [delay, setDelay] = useState(10);
+  const [checkpointInterval, setCheckpointInterval] = useState<number | ''>('');
 
   // ── Campaign live status (fetched from API, survives refresh) ───────────────
   const [campaignStats, setCampaignStats] = useState<CampaignStats | null>(null);
@@ -65,6 +68,7 @@ const EmailForm: React.FC = () => {
   // ── UI state ────────────────────────────────────────────────────────────────
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState<AlertState>({ open: false, severity: "success", message: "" });
+  const [builderOpen, setBuilderOpen] = useState(false);
 
   const showAlert = (severity: AlertState["severity"], message: string) =>
     setAlert({ open: true, severity, message });
@@ -258,6 +262,7 @@ const EmailForm: React.FC = () => {
         emailTemplate: encodeURIComponent(emailTemplate),
         mode: "bulk",
         offerId, selectedIp, batchSize, delay, ipMode,
+        ...(checkpointInterval !== '' && { checkpointInterval: Number(checkpointInterval) }),
       });
 
       if (response.success) {
@@ -303,6 +308,7 @@ const EmailForm: React.FC = () => {
         emailTemplate: encodeURIComponent(emailTemplate),
         mode: "bulk",
         offerId, selectedIp, batchSize, delay, ipMode,
+        ...(checkpointInterval !== '' && { checkpointInterval: Number(checkpointInterval) }),
       });
 
       if (response.success) {
@@ -412,9 +418,22 @@ const EmailForm: React.FC = () => {
               </Stack>
 
               <Box>
-                <Typography variant="caption" color="text.secondary" mb={0.5} display="block">
-                  Email Template
-                </Typography>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" mb={0.5}>
+                  <Typography variant="caption" color="text.secondary">
+                    Email Template
+                  </Typography>
+                  <Tooltip title="Open full-screen code editor with live preview" arrow>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<CodeIcon sx={{ fontSize: 14 }} />}
+                      onClick={() => setBuilderOpen(true)}
+                      sx={{ textTransform: "none", fontSize: 11, py: 0.25, px: 1 }}
+                    >
+                      Open Builder
+                    </Button>
+                  </Tooltip>
+                </Stack>
                 <TextareaAutosize
                   minRows={5} maxRows={12}
                   value={emailTemplate}
@@ -473,6 +492,26 @@ const EmailForm: React.FC = () => {
                   }}
                 />
               </Stack>
+            )}
+
+            {/* Checkpoint interval — bulk only, optional */}
+            {mode === "bulk" && (
+              <TextField
+                label="Deliverability Check Interval"
+                type="number"
+                value={checkpointInterval}
+                size="small"
+                fullWidth
+                placeholder="500"
+                onChange={(e) => setCheckpointInterval(e.target.value === '' ? '' : Number(e.target.value))}
+                InputProps={{
+                  endAdornment: (
+                    <Tooltip title="Pause and run inbox check every N emails sent. Leave blank for default (500)." arrow>
+                      <InfoOutlinedIcon sx={{ fontSize: 14, color: "#9e9e9e" }} />
+                    </Tooltip>
+                  ),
+                }}
+              />
             )}
 
             <Divider />
@@ -565,6 +604,18 @@ const EmailForm: React.FC = () => {
                   Campaign: {campaignId}
                 </Typography>
               </Stack>
+
+              {/* Checkpoint status indicators */}
+              {campaignStats.checkpointStatus === 'checking' && (
+                <Alert severity="info" sx={{ py: 0.5, fontSize: 12 }}>
+                  Deliverability check in progress…
+                </Alert>
+              )}
+              {isPaused && campaignStats.checkpointStatus === 'spam' && (
+                <Alert severity="error" sx={{ py: 0.5, fontSize: 12 }}>
+                  Paused — Spam detected in deliverability check. Fix your template and resume.
+                </Alert>
+              )}
 
               {campaignStats.counts && (
                 <>
@@ -668,6 +719,14 @@ const EmailForm: React.FC = () => {
           </>
         )}
       </Box>
+      {/* ── Template Builder overlay ── */}
+      {builderOpen && (
+        <TemplateBuilder
+          initialValue={emailTemplate}
+          onUse={(html) => setEmailTemplate(html)}
+          onClose={() => setBuilderOpen(false)}
+        />
+      )}
     </Box>
   );
 };

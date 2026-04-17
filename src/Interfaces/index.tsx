@@ -78,6 +78,11 @@ export interface CreateCampaignDto {
    * 'round-robin' — rotate across all warmed IPs for the domain
    */
   ipMode?: 'single' | 'round-robin';
+  /**
+   * Optional per-campaign deliverability checkpoint interval (emails sent between checks).
+   * Defaults to 500 if omitted.
+   */
+  checkpointInterval?: number;
 }
 
 export interface Campaign {
@@ -100,6 +105,8 @@ export interface Campaign {
   totalEmails?: number;
   sentEmails?: number;
   failedEmails?: number;
+  checkpointStatus?: 'idle' | 'checking' | 'inbox' | 'spam';
+  checkpointInterval?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -107,6 +114,7 @@ export interface Campaign {
 export interface CampaignStats {
   campaignId: string;
   status: string;
+  checkpointStatus?: 'idle' | 'checking' | 'inbox' | 'spam';
   counts: {
     sent: number;
     failed: number;
