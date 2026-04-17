@@ -89,7 +89,9 @@ const TemplateBuilder: React.FC<TemplateBuilderProps> = ({
   };
 
   // ── Preview width ───────────────────────────────────────────────────────────
-  const previewWidth = previewMode === "mobile" ? 375 : "100%";
+  const MOBILE_WIDTH = 375;
+  const RENDER_WIDTH = 600; // email templates are typically 600px wide
+  const mobileScale = MOBILE_WIDTH / RENDER_WIDTH;
 
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -292,28 +294,52 @@ const TemplateBuilder: React.FC<TemplateBuilderProps> = ({
               overflow: "auto",
               display: "flex",
               justifyContent: "center",
+              alignItems: "flex-start",
               p: previewMode === "mobile" ? 2 : 0,
               background: previewMode === "mobile" ? "#e0e0e0" : "#f0f0f0",
             }}
           >
-            <Box
-              sx={{
-                width: previewWidth,
-                height: "100%",
-                background: "#fff",
-                boxShadow: previewMode === "mobile" ? "0 4px 20px rgba(0,0,0,0.2)" : "none",
-                borderRadius: previewMode === "mobile" ? 2 : 0,
-                overflow: "hidden",
-                flexShrink: 0,
-              }}
-            >
-              <iframe
-                title="Email Preview"
-                srcDoc={code || "<p style='color:#aaa;padding:24px;font-family:sans-serif'>Start typing HTML to see a preview…</p>"}
-                style={{ width: "100%", height: "100%", border: "none" }}
-                sandbox="allow-same-origin"
-              />
-            </Box>
+            {previewMode === "desktop" ? (
+              // Desktop — full width iframe, no scaling needed
+              <Box sx={{ width: "100%", height: "100%" }}>
+                <iframe
+                  title="Email Preview"
+                  srcDoc={code || "<p style='color:#aaa;padding:24px;font-family:sans-serif'>Start typing HTML to see a preview…</p>"}
+                  style={{ width: "100%", height: "100%", border: "none", display: "block" }}
+                  sandbox="allow-same-origin"
+                />
+              </Box>
+            ) : (
+              // Mobile — render at 600px wide then scale down to 375px
+              // This correctly simulates how email clients render on mobile
+              // without the email's fixed-width tables overflowing
+              <Box
+                sx={{
+                  width: MOBILE_WIDTH,
+                  flexShrink: 0,
+                  background: "#fff",
+                  boxShadow: "0 4px 24px rgba(0,0,0,0.18)",
+                  borderRadius: 2,
+                  overflow: "hidden",
+                  // Scale a 600px-wide iframe down to fit 375px
+                  "& iframe": {
+                    transformOrigin: "top left",
+                    transform: `scale(${mobileScale})`,
+                    width: `${RENDER_WIDTH}px`,
+                    height: `calc(100% / ${mobileScale})`,
+                    border: "none",
+                    display: "block",
+                  },
+                  height: 700,
+                }}
+              >
+                <iframe
+                  title="Email Preview Mobile"
+                  srcDoc={code || "<p style='color:#aaa;padding:24px;font-family:sans-serif'>Start typing HTML to see a preview…</p>"}
+                  sandbox="allow-same-origin"
+                />
+              </Box>
+            )}
           </Box>
         </Box>
       </Box>
