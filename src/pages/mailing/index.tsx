@@ -124,6 +124,13 @@ const EmailForm: React.FC = () => {
     return () => clearTimeout(t);
   }, [campaignId, fetchCampaignStats]);
 
+  // Auto-poll every 30s while campaign is running
+  useEffect(() => {
+    if (!campaignId || !isRunning) return;
+    const interval = setInterval(() => fetchCampaignStats(campaignId), 30_000);
+    return () => clearInterval(interval);
+  }, [campaignId, isRunning, fetchCampaignStats]);
+
   // ── Load available IPs ──────────────────────────────────────────────────────
   useEffect(() => {
     (async () => {
@@ -579,7 +586,18 @@ const EmailForm: React.FC = () => {
       {mode === "bulk" && campaignId && (
         <Card variant="outlined" sx={{ mt: 3, p: 2, borderRadius: 2 }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1.5}>
-            <Typography variant="subtitle1" fontWeight={600}>Campaign Status</Typography>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Typography variant="subtitle1" fontWeight={600}>Campaign Status</Typography>
+              {isRunning && (
+                <Chip
+                  label="LIVE"
+                  size="small"
+                  color="success"
+                  variant="outlined"
+                  sx={{ fontSize: 10, height: 18, fontWeight: 700, letterSpacing: 0.5 }}
+                />
+              )}
+            </Stack>
             <Tooltip title="Refresh status">
               <IconButton size="small" onClick={() => fetchCampaignStats(campaignId)} disabled={statsLoading}>
                 {statsLoading ? <CircularProgress size={16} /> : <RefreshIcon fontSize="small" />}
