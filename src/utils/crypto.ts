@@ -7,15 +7,18 @@ const fixedIV = CryptoJS.enc.Hex.parse("00000000000000000000000000000000"); // F
 
 /**
  * Encrypts a given plain text using AES-256-CBC with a fixed IV.
+ * Returns base64url encoding (uses - and _ instead of + and /) so the result
+ * is safe to embed directly in a URL path without %2F slash issues.
+ * The redirection-service decryptor handles both base64url and standard base64.
  * @param {string} plainText - The text to encrypt.
- * @returns {string} - The URL-encoded encrypted string.
+ * @returns {string} - The base64url-encoded encrypted string (no encodeURIComponent needed).
  */
 export function encrypt(plainText: string): string {
   if (!plainText || plainText.trim() === "") {
     throw new Error("Invalid input: Text to encrypt cannot be empty.");
   }
 
-  // Encrypt the text
+  // Encrypt the text — output is standard base64
   const encrypted = CryptoJS.AES.encrypt(
     plainText,
     CryptoJS.enc.Utf8.parse(secretKey),
@@ -26,8 +29,14 @@ export function encrypt(plainText: string): string {
     }
   ).toString();
 
-  // URL encode the encrypted string
-  return encodeURIComponent(encrypted);
+  // Convert standard base64 → base64url:
+  //   + → -   (avoids %2B in URLs)
+  //   / → _   (avoids %2F slash issues with nginx and Express routing)
+  //   = removed (padding not needed in URLs)
+  return encrypted
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
 }
 
 /**
