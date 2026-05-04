@@ -40,6 +40,7 @@ function ResponsiveAppBar() {
     try {
       await logOut();
       sessionStorage.removeItem("authToken");
+      sessionStorage.removeItem("loginTime");
       setLogin(false);
     } catch (error) {
       console.log(error);

@@ -17,18 +17,20 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 
-export const getIdToken = (forceRefresh = false) => {
+export const getIdToken = async (forceRefresh = false): Promise<string | null> => {
   const authInstance = getAuth();
-   authInstance?.currentUser?.getIdToken(forceRefresh)
-    .then(function(idToken) {
-      console.log("ID token:", idToken);
-      if(idToken) sessionStorage.setItem("authToken",  idToken);
+  try {
+    const idToken = await authInstance?.currentUser?.getIdToken(forceRefresh);
+    console.log("ID token refreshed:", !!idToken);
+    if (idToken) {
+      sessionStorage.setItem("authToken", idToken);
       return idToken;
-    })
-    .catch(function(error) {
-      console.error("Error getting ID token:", error);
-      throw error;
-    });
+    }
+    return null;
+  } catch (error) {
+    console.error("Error getting ID token:", error);
+    throw error;
+  }
 }
 
 export default app;

@@ -14,6 +14,16 @@ import {
 import { auth } from "../../firebase";
 import { AuthContextModel, AuthProviderProps } from "../Interfaces/index";
 import { jwtDecode as jwtDecodeFn } from "jwt-decode";
+import { 
+  getMaxSessionDuration, 
+  getTokenRefreshInterval, 
+  isSessionExpired 
+} from "../config/auth.config";
+
+interface DecodedToken {
+  admin?: boolean;
+  [key: string]: unknown;
+}
 
 const userAuthContext = createContext<AuthContextModel>({} as AuthContextModel);
 
@@ -27,23 +37,19 @@ export function UserAuthContextProvider({ children }: AuthProviderProps) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   async function logIn(email: string, password: string) {
-    //   const persistence = false  //remember me functionality
-    //  ? auth.Persistence.LOCAL
-    //  : auth.Auth.Persistence.SESSION;
     await setPersistence(auth, browserSessionPersistence);
-    const res: any = await signInWithEmailAndPassword(auth, email, password);
-    const token = res?.user?.accessToken;
-    if (token) {
+    const res = await signInWithEmailAndPassword(auth, email, password);
+    
+    // Get fresh token from the user object
+    if (res?.user) {
+      const token = await res.user.getIdToken();
       sessionStorage.setItem("authToken", token);
-      const decodedToken: any = jwtDecodeFn(token);
-
-      // Check if the token has the 'admin' claim
-      if (decodedToken?.admin) {
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
-      }
+      sessionStorage.setItem("loginTime", Date.now().toString());
+      
+      const decodedToken = jwtDecodeFn<DecodedToken>(token);
+      setIsAdmin(decodedToken?.admin || false);
     }
+    
     return res;
   }
   function signUp(email: string, password: string, username: string) {
@@ -65,25 +71,62 @@ export function UserAuthContextProvider({ children }: AuthProviderProps) {
   }
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentuser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentuser) => {
       setUser(currentuser);
       setLoading(false);
-      /**
-       * sessionStorage.getItem("authToken")  is redundant as we can directly get the token from currentuser
-       * const token = await currentUser.getIdTokenResult();
-       * setIsAdmin(token.claims.admin || false);
-       */
-      const token = sessionStorage.getItem("authToken");
-      if (token) {
-        setLogin(true);
-        // Decode the JWT token
-        const decodedToken: any = jwtDecodeFn(token);
-        // Check if the token has the 'admin' claim
-        if (decodedToken?.admin) {
-          setIsAdmin(true);
-        } else {
-          setIsAdmin(false);
+      
+      if (currentuser) {
+        // Get fresh token and store it
+        try {
+          const token = await currentuser.getIdToken();
+          sessionStorage.setItem("authToken", token);
+          setLogin(true);
+          
+          // Decode the JWT token to check admin claim
+          const decodedToken = jwtDecodeFn<DecodedToken>(token);
+          setIsAdmin(decodedToken?.admin || false);
+          
+          // Store login timestamp for absolute session timeout
+          const loginTime = sessionStorage.getItem("loginTime");
+          if (!loginTime) {
+            sessionStorage.setItem("loginTime", Date.now().toString());
+          }
+          
+          // Set up automatic token refresh every 50 minutes (before 60min expiry)
+          const refreshInterval = setInterval(async () => {
+            try {
+              // Check if absolute session timeout has been reached
+              const loginTimestamp = parseInt(sessionStorage.getItem("loginTime") || "0");
+              
+              if (isSessionExpired(loginTimestamp)) {
+                console.log(`Session expired after ${getMaxSessionDuration() / (60 * 60 * 1000)} hours - logging out`);
+                clearInterval(refreshInterval);
+                sessionStorage.clear();
+                await signOut(auth);
+                window.location.href = "/signin?reason=session_expired";
+                return;
+              }
+              
+              console.log("Proactively refreshing token...");
+              const freshToken = await currentuser.getIdToken(true);
+              sessionStorage.setItem("authToken", freshToken);
+              console.log("Token refreshed successfully");
+            } catch (error) {
+              console.error("Error refreshing token:", error);
+              clearInterval(refreshInterval);
+            }
+          }, getTokenRefreshInterval());
+          
+          // Clean up interval on unmount or user change
+          return () => clearInterval(refreshInterval);
+        } catch (error) {
+          console.error("Error getting initial token:", error);
         }
+      } else {
+        setLogin(false);
+        setIsAdmin(false);
+        sessionStorage.removeItem("authToken");
+        sessionStorage.removeItem("loginTime");
       }
     });
 
