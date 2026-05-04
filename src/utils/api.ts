@@ -120,7 +120,7 @@ export const apiGet = async (
       headers: additionalHeaders,
       params,
     });
-    console.log("🚀 ~ response:", response);
+    // console.log("🚀 ~ response:", response);
     return response;
   } catch (error) {
     handleApiError(error as AxiosError, url);
