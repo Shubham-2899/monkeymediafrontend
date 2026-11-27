@@ -50,7 +50,7 @@ const Signup = () => {
       try {
         setLoading(true);
         await signUp(userData.email, userData.password, userData.username);
-        if (auth.currentUser) {
+        if (auth?.currentUser) {
           updateProfile(auth.currentUser, {
             displayName: userData.username,
           })

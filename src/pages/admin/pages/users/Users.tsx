@@ -1,4 +1,4 @@
-import { Box, Button, CircularProgress, Typography, Card, CardContent, Snackbar, Alert, Stack, Chip } from "@mui/material";
+import { Box, Button, Typography, Card, CardContent, Snackbar, Alert, Stack, Chip } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { useEffect, useState } from "react";
 import { apiGet } from "../../../../utils/api";
@@ -6,6 +6,7 @@ import ReusableModal from "../../../../components/ReusableModal";
 import ServerDataTable from "./ServerDataTable";
 import PeopleIcon from "@mui/icons-material/People";
 import AddIcon from "@mui/icons-material/Add";
+import MailLoader from "../../../../components/MailLoader";
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -159,7 +160,7 @@ const Users = () => {
                   gap: 2
                 }}
               >
-                <CircularProgress size={40} color="primary" />
+                <MailLoader size={88} label="" />
                 <Typography variant="body2" color="text.secondary">
                   Loading users...
                 </Typography>

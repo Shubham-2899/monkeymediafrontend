@@ -1,25 +1,13 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../contexts/UserAuthContext";
-import { Box, CircularProgress } from "@mui/material";
+import MailLoader from "../components/MailLoader";
 
 const ProtectedRoute = () => {
   const { user, loading } = useAuth();
 
   // Show loading state until Firebase finishes checking auth status
   if (loading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          height: "100%",
-          mt: 10,
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
+    return <MailLoader variant="fullscreen" size={140} label="Checking your inbox" />;
   }
 
   return user ? <Outlet /> : <Navigate to="/signin" />;

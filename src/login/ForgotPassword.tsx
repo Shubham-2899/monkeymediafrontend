@@ -1,10 +1,13 @@
-import { Alert, Box, Button, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, InputAdornment, Stack, TextField, Typography } from "@mui/material";
 import React, { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useUserAuth } from "../contexts/UserAuthContext";
 import { validateEmail } from "../heplers/UserDataValidation";
 import LockResetIcon from "@mui/icons-material/LockReset";
-import { Paper, Stack, Avatar } from "@mui/material";
+import AlternateEmailRoundedIcon from "@mui/icons-material/AlternateEmailRounded";
+import SendRoundedIcon from "@mui/icons-material/SendRounded";
+import AuthShell from "./AuthShell";
+import MailLoader from "../components/MailLoader";
 
 export const ForgotPassword = () => {
   const { resetPassword } = useUserAuth();
@@ -36,92 +39,69 @@ export const ForgotPassword = () => {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "#f4f6fa",
-      }}
-    >
-      <Paper
-        elevation={2}
-        sx={{
-          p: { xs: 2, sm: 4 },
-          borderRadius: 3,
-          minWidth: 340,
-          maxWidth: 400,
-          width: "100%",
-        }}
-      >
-        <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
-          <Avatar sx={{ bgcolor: "primary.main", width: 48, height: 48 }}>
-            <LockResetIcon fontSize="large" />
-          </Avatar>
-          <Box>
-            <Typography variant="h5" fontWeight={600} color="#333">
-              Forgot Password
-            </Typography>
-            <Typography variant="body2" sx={{ color: "#666" }}>
-              Enter your email to receive a reset link
-            </Typography>
-          </Box>
-        </Stack>
-        <Box component="form" onSubmit={submitHanlder} noValidate>
-          {typeof error === "string" && error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-          {typeof message === "string" && message && (
-            <Alert severity="success" sx={{ mb: 2 }}>
-              {message}
-            </Alert>
-          )}
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="email"
-            label="Email Address"
-            name="email"
-            autoComplete="email"
-            autoFocus
-            type="email"
-            inputRef={emailRef}
-            sx={{ mb: 2 }}
-          />
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            sx={{
-              borderRadius: 2,
-              py: 1.2,
-              fontWeight: 600,
-              fontSize: 16,
-              mb: 1,
-            }}
-            disabled={loading}
-          >
-            Submit
-          </Button>
-          <Box sx={{ textAlign: "right" }}>
-            <Link
-              to="/signin"
-              className="links"
-              style={{
-                textDecoration: "none",
-                color: "#1976d2",
-                fontWeight: 500,
-              }}
-            >
-              Back to Sign in
-            </Link>
-          </Box>
+    <AuthShell>
+      <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
+        <Box className="auth-badge">
+          <LockResetIcon sx={{ fontSize: 24 }} />
         </Box>
-      </Paper>
-    </Box>
+        <Box>
+          <Typography variant="h5" sx={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26 }}>
+            Forgot password
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            We&apos;ll email you a secure reset link
+          </Typography>
+        </Box>
+      </Stack>
+      <Box component="form" onSubmit={submitHanlder} noValidate>
+        {typeof error === "string" && error && (
+          <Alert severity="error" variant="outlined" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        {typeof message === "string" && message && (
+          <Alert severity="success" variant="outlined" sx={{ mb: 2 }}>
+            {message}
+          </Alert>
+        )}
+        <TextField
+          margin="normal"
+          required
+          fullWidth
+          id="email"
+          label="Email Address"
+          name="email"
+          autoComplete="email"
+          autoFocus
+          type="email"
+          inputRef={emailRef}
+          sx={{ mb: 3 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <AlternateEmailRoundedIcon sx={{ color: "text.secondary" }} />
+              </InputAdornment>
+            ),
+          }}
+        />
+        <Button
+          type="submit"
+          fullWidth
+          variant="contained"
+          size="large"
+          endIcon={<SendRoundedIcon />}
+          sx={{ borderRadius: 0, py: 1.4, fontSize: 16, boxShadow: "4px 4px 0 var(--stamp)", mb: 2 }}
+          disabled={loading}
+        >
+          Send reset link
+        </Button>
+        <Box sx={{ textAlign: "center" }}>
+          <Link to="/signin" className="auth-link">
+            Back to sign in
+          </Link>
+        </Box>
+      </Box>
+      {loading && <MailLoader variant="overlay" size={96} label="Sending reset email" />}
+    </AuthShell>
   );
 };

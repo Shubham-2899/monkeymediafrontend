@@ -4,16 +4,140 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/mms.jpeg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f5f1ea" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500&family=Roboto+Mono:wght@400;500&display=swap"
     />
     <title>Monkey Media Portal</title>
+    <style>
+      /* Boot loader: shown until React mounts and replaces #root's contents. */
+      .boot {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 22px;
+        background: #f5f1ea;
+        font: 400 13px/1 "Roboto Mono", ui-monospace, monospace;
+        letter-spacing: 0.08em;
+        color: #3d4a63;
+      }
+      .boot-stage {
+        position: relative;
+        width: 120px;
+        height: 120px;
+      }
+      .boot-env {
+        position: absolute;
+        left: 18%;
+        top: 34%;
+        width: 64%;
+        height: 44%;
+        border-radius: 8px;
+        background: #fffdf8;
+        border: 1.5px solid #14213d;
+        box-sizing: border-box;
+        box-shadow: 4px 4px 0 rgba(20, 33, 61, 0.12);
+        animation: boot-bounce 2.4s ease-in-out infinite;
+      }
+      .boot-env::before {
+        /* flap */
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 62%;
+        background: #14213d;
+        clip-path: polygon(0 0, 100% 0, 50% 100%);
+        transform-origin: 50% 0;
+        animation: boot-flap 2.4s ease-in-out infinite;
+      }
+      .boot-mail {
+        position: absolute;
+        left: 50%;
+        top: 44%;
+        width: 30px;
+        height: 21px;
+        margin: -10px 0 0 -15px;
+        border-radius: 3px;
+        background: #fff;
+        border: 1.5px solid #14213d;
+        box-sizing: border-box;
+        opacity: 0;
+        animation: boot-fly 2.4s ease-in infinite;
+      }
+      .boot-mail:nth-child(2) {
+        --sx: -120px;
+        --sy: -80px;
+        animation-delay: 0.2s;
+      }
+      .boot-mail:nth-child(3) {
+        --sx: 120px;
+        --sy: -60px;
+        animation-delay: 0.45s;
+      }
+      .boot-mail:nth-child(4) {
+        --sx: 0px;
+        --sy: -120px;
+        animation-delay: 0.7s;
+      }
+      @keyframes boot-fly {
+        0% {
+          opacity: 0;
+          transform: translate(var(--sx), var(--sy)) scale(0.9);
+        }
+        6%,
+        22% {
+          opacity: 1;
+        }
+        32%,
+        100% {
+          opacity: 0;
+          transform: translate(0, 0) scale(0.3);
+        }
+      }
+      @keyframes boot-flap {
+        0%,
+        4%,
+        72%,
+        100% {
+          transform: rotateX(0deg);
+        }
+        14%,
+        60% {
+          transform: rotateX(178deg);
+        }
+      }
+      @keyframes boot-bounce {
+        0%,
+        72%,
+        100% {
+          transform: translateY(0);
+        }
+        84% {
+          transform: translateY(-12%);
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="boot" role="status" aria-label="Loading">
+        <div class="boot-stage">
+          <div class="boot-env"></div>
+          <div class="boot-mail"></div>
+          <div class="boot-mail"></div>
+          <div class="boot-mail"></div>
+        </div>
+        Loading your inbox…
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

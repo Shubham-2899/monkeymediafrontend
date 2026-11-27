@@ -8,7 +8,6 @@ import {
   Button,
   Tabs,
   Tab,
-  CircularProgress,
   Alert,
   Collapse,
   IconButton,
@@ -23,6 +22,7 @@ import { Campaign, CampaignStats } from "../../Interfaces";
 import { CampaignService } from "../../utils/campaignService";
 import CampaignDashboard from "../../components/CampaignDashboard";
 import EmailCampaignForm from "../../components/EmailCampaignForm";
+import MailLoader from "../../components/MailLoader";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -289,7 +289,7 @@ const CampaignsPage: React.FC = () => {
               <TabPanel value={tabValue} index={4}>
                 {loading ? (
                   <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-                    <CircularProgress />
+                    <MailLoader size={88} label="Loading campaigns" />
                   </Box>
                 ) : getFilteredCampaigns().length === 0 ? (
                   <Box sx={{ textAlign: "center", p: 4 }}>

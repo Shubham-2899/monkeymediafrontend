@@ -1,3 +1,168 @@
 body {
   margin: 0;
 }
+
+/* ---------------- brand tokens: editorial paper ---------------- */
+
+:root {
+  --paper: #f5f1ea;
+  --paper-2: #ece6db;
+  --card: #fffdf8;
+  --ink: #14213d;
+  --ink-2: #3d4a63;
+  --muted: #6b7285;
+  --rule: rgba(20, 33, 61, 0.14);
+  --rule-strong: rgba(20, 33, 61, 0.35);
+  --stamp: #c8553d;
+  --airmail: #1f4e8c;
+  --serif: "Roboto", "Helvetica Neue", Arial, sans-serif; /* headings (Roboto everywhere) */
+  --sans: "Roboto", "Helvetica Neue", Arial, sans-serif;
+  --mono: "Roboto Mono", ui-monospace, monospace;
+}
+
+/* ---------------- shared motion (kept quiet on purpose) ---------------- */
+
+@keyframes scene-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes panel-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.hero-in {
+  animation: hero-in 0.7s ease-out both;
+}
+
+/* ---------------- portal launchpad cards (dashboard /home) ---------------- */
+
+.tilt-card {
+  --rx: 0deg;
+  --ry: 0deg;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 200px;
+  padding: 24px 22px 20px;
+  text-decoration: none;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--ink);
+  box-shadow: 5px 5px 0 rgba(20, 33, 61, 0.1);
+  transform: rotateX(var(--rx)) rotateY(var(--ry));
+  transform-style: preserve-3d;
+  transition: transform 0.18s ease-out, box-shadow 0.25s;
+}
+
+.tilt-card:hover {
+  box-shadow: 8px 8px 0 color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.tilt-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.tilt-card__glare {
+  display: none;
+}
+
+.tilt-card__icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  transform: translateZ(30px);
+}
+
+.tilt-card__title {
+  margin-top: 8px;
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 500;
+  transform: translateZ(24px);
+}
+
+.tilt-card__text {
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  transform: translateZ(16px);
+}
+
+.tilt-card__go {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--accent);
+  transform: translateZ(20px);
+}
+
+.tilt-card__go svg {
+  transition: transform 0.25s;
+}
+
+.tilt-card:hover .tilt-card__go svg {
+  transform: translateX(4px);
+}
+
+/* ---------------- auth ---------------- */
+
+.auth-badge {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  color: var(--stamp);
+  border: 1.5px dashed var(--stamp);
+}
+
+.auth-link {
+  color: var(--airmail);
+  font-weight: 500;
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-link:hover {
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-in {
+    animation: none;
+  }
+}

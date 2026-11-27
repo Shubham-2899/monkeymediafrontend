@@ -7,7 +7,6 @@ import {
   Collapse,
   IconButton,
   Alert,
-  CircularProgress,
   Card,
   CardContent,
   Stack,
@@ -19,6 +18,7 @@ import BlockIcon from "@mui/icons-material/Block";
 import SearchIcon from "@mui/icons-material/Search";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { apiGet } from "../../../../utils/api";
+import MailLoader from "../../../../components/MailLoader";
 
 interface ISuppression {
   email: string;
@@ -250,7 +250,7 @@ const Suppression: React.FC = () => {
                   gap: 2
                 }}
               >
-                <CircularProgress size={40} color="primary" />
+                <MailLoader size={88} label="" />
                 <Typography variant="body2" color="text.secondary">
                   Loading suppression data...
                 </Typography>

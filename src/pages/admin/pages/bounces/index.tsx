@@ -12,6 +12,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SyncIcon from "@mui/icons-material/Sync";
 import CloseIcon from "@mui/icons-material/Close";
 import { apiGet, apiPost, apiDelete } from "../../../../utils/api";
+import MailLoader from "../../../../components/MailLoader";
 
 interface BouncedEmail {
   _id: string;
@@ -180,7 +181,7 @@ const Bounces: React.FC = () => {
       {/* Table */}
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: 300 }}>
-          <CircularProgress />
+          <MailLoader size={88} label="Loading bounces" />
         </Box>
       ) : (
         <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>

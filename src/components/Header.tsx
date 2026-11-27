@@ -6,310 +6,233 @@ import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import LoginRoundedIcon from "@mui/icons-material/LoginRounded";
+import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import Button from "@mui/material/Button";
-import Paper from "@mui/material/Paper";
-// import mms from "../assets/mms.jpeg";
+import type { SxProps, Theme } from "@mui/material/styles";
 import raspix from "../assets/raspix-logo.png";
 import { useAuth } from "../contexts/UserAuthContext";
+import { SITE_NAV } from "../site/content";
 
 const shimmerStyle = {
-  background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+  background: "linear-gradient(90deg, rgba(20,33,61,0.05) 25%, rgba(20,33,61,0.1) 50%, rgba(20,33,61,0.05) 75%)",
   backgroundSize: "200% 100%",
   animation: "shimmer 1.5s infinite",
-  height: "40px",
-  width: "150px",
-  borderRadius: "5px",
+  borderRadius: 2,
+  width: 90,
+  height: 32,
 };
 
-const pages = ["Home", "Create link", "Mailing", "Analytics", "Report"];
+const PORTAL_PAGES = [
+  { label: "Home", to: "/home" },
+  { label: "Create link", to: "/create-link" },
+  { label: "Mailing", to: "/mailing" },
+  { label: "Analytics", to: "/analytics" },
+  { label: "Report", to: "/report" },
+];
+
+const PORTAL_PREFIXES = ["/home", "/create-link", "/mailing", "/analytics", "/report", "/admin"];
+
+const navLinkSx = (active: boolean, mobile = false): SxProps<Theme> => ({
+  position: "relative",
+  color: active ? "#14213d" : "#3d4a63",
+  background: "transparent",
+  borderRadius: 0,
+  fontFamily: '"Roboto", "Helvetica Neue", Arial, sans-serif',
+  px: 1.75,
+  py: 1,
+  minWidth: 0,
+  textTransform: "none",
+  transition: "color .2s, background .2s",
+  ...(mobile && { justifyContent: "flex-start", py: 1.4 }),
+  "&::after": {
+    display: mobile ? "none" : "block",
+    content: '""',
+    position: "absolute",
+    left: 14,
+    right: 14,
+    bottom: 6,
+    height: 1.5,
+    background: "#c8553d",
+    transform: active ? "scaleX(1)" : "scaleX(0)",
+    transition: "transform .3s cubic-bezier(.2,.8,.2,1)",
+  },
+  "&:hover": { color: "#14213d", background: "transparent" },
+  "&:hover::after": { transform: "scaleX(1)" },
+});
+
+const softButtonSx: SxProps<Theme> = {
+  color: "#14213d",
+  fontFamily: '"Roboto", "Helvetica Neue", Arial, sans-serif',
+  fontWeight: 600,
+  fontSize: 15,
+  textTransform: "none",
+  px: 2.25,
+  py: 0.8,
+  borderRadius: 0,
+  border: "1px solid #14213d",
+  background: "transparent",
+  "&:hover": { background: "#14213d", color: "#f5f1ea" },
+};
 
 function ResponsiveAppBar() {
   const [openNav, setOpenNav] = React.useState(false);
   const location = useLocation();
   const { login, logOut, setLogin, isAdmin, loading } = useAuth();
 
-  const handleOpenNavMenu = () => {
-    setOpenNav(!openNav);
-  };
+  const path = location.pathname;
+  const inPortal = PORTAL_PREFIXES.some((p) => path === p || path.startsWith(p + "/"));
+  const onAuthPage = path === "/signin" || path === "/forgot-password";
+  const alignToPage = !inPortal || path === "/home";
 
-  const handleMenuItemClick = () => {
-    setOpenNav(false); // Close the navigation menu after navigation
-  };
+  const handleMenuItemClick = () => setOpenNav(false);
 
   const handleLogOut = async () => {
     try {
       await logOut();
       sessionStorage.removeItem("authToken");
       setLogin(false);
+      setOpenNav(false);
     } catch (error) {
       console.log(error);
     }
   };
 
-  const getPagePath = (page: string) => {
-    switch (page) {
-      case "Home":
-        return "/home";
-      case "Create link":
-        return "/create-link";
-      case "Mailing":
-        return "/mailing";
-      case "Analytics":
-        return "/analytics";
-      case "Report":
-        return "/report";
-      default:
-        return `/${page.toLowerCase().replace(" ", "-")}`;
-    }
-  };
+  // Public website pages show the site menu; the portal shows its own tools.
+  const items = inPortal ? [...PORTAL_PAGES, ...(isAdmin ? [{ label: "Admin", to: "/admin" }] : [])] : SITE_NAV;
+  const isActive = (to: string) => (to === "/admin" ? path.startsWith("/admin") : path === to);
+
+  const rightAction = inPortal ? (
+    <Button
+      onClick={handleLogOut}
+      startIcon={<LogoutRoundedIcon />}
+      sx={{
+        px: 2,
+        py: 0.9,
+        color: "#c8553d",
+        fontWeight: 600,
+        fontSize: 15,
+        textTransform: "none",
+        borderRadius: 0,
+        border: "1px solid rgba(200,85,61,0.5)",
+        "&:hover": { background: "rgba(200,85,61,0.08)", borderColor: "#c8553d" },
+      }}
+    >
+      Logout
+    </Button>
+  ) : login ? (
+    <Button component={Link} to="/home" onClick={handleMenuItemClick} startIcon={<DashboardRoundedIcon />} sx={softButtonSx}>
+      Open Portal
+    </Button>
+  ) : onAuthPage ? null : (
+    <Button component={Link} to="/signin" onClick={handleMenuItemClick} startIcon={<LoginRoundedIcon />} sx={softButtonSx}>
+      Client Login
+    </Button>
+  );
+
+  // Inside the portal, wait for auth before drawing the menu (avoids a flash).
+  const showSkeleton = inPortal && loading;
 
   return (
-    <Paper elevation={0} sx={{ borderRadius: 0, position: 'sticky', top: 0, zIndex: 9900 }}>
+    <Box component="header" sx={{ position: "sticky", top: 0, zIndex: 9900 }}>
       <AppBar
         position="static"
         color="transparent"
         elevation={0}
         sx={{
-          backgroundColor: "#fff",
-          borderBottom: "1px solid #e0e0e0",
-          boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
+          background: "#f5f1ea",
+          color: "#14213d",
+          fontFamily: '"Roboto", "Helvetica Neue", Arial, sans-serif',
         }}
       >
-        <Toolbar disableGutters sx={{ minHeight: 76, px: { xs: 1, sm: 3 } }}>
-          <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
-            <Link style={{ textDecoration: "none", color: "#1976d2", display: 'flex', alignItems: 'center' }} to={`/home`}>
-              <img
-                src={raspix}
-                alt="monkey media email marketing"
-                style={{
-                  objectFit: "cover",
-                  maxWidth: "140px",
-                  margin: "5px 0",
-                  borderRadius: 6,
-                  // boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
-                }}
-              />
-              {/* <Typography variant="h6" sx={{ ml: 1, fontWeight: 700, color: '#1976d2', display: { xs: 'none', sm: 'block' } }}>
-                Monkey Media
-              </Typography> */}
+        {/* Website pages: same centred 1200px column + 28px gutters as the page content (.wrap),
+            so the logo and the last button line up with the content edges.
+            Portal tool pages keep a full-width bar (some have their own side drawer). */}
+        <Toolbar
+          disableGutters
+          sx={{
+            minHeight: 76,
+            width: "100%",
+            boxSizing: "border-box",
+            ...(alignToPage ? { maxWidth: 1200, mx: "auto", px: "28px" } : { px: { xs: 1.5, sm: 3 } }),
+          }}
+        >
+          <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center" }}>
+            <Link to={inPortal ? "/home" : "/"} style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
+              {/* multiply blends the logo's white background into the paper */}
+              <img src={raspix} alt="RASPIX Media" style={{ maxWidth: 118, display: "block", mixBlendMode: "multiply" }} />
             </Link>
           </Box>
-          {loading ? (
-          <Box sx={{ display: { xs: "none", md: "flex" }, gap: 2, alignItems: 'center' }}>
-            {[...Array(4)].map((_, i) => (
-              <Box key={i} sx={{ ...shimmerStyle, borderRadius: 2, width: 90, height: 32 }} />
-            ))}
-          </Box>
-        ) : login ? (
-          <>
-            <Box
-              sx={{
-                display: { xs: "flex", md: "none" },
-                border: "1px solid #e0e0e0",
-                borderRadius: 2,
-                marginRight: 2,
-                backgroundColor: openNav ? "#f5f6fa" : "#fff",
-                boxShadow: openNav ? '0 1px 4px rgba(0,0,0,0.04)' : 'none',
-                transition: 'background 0.2s',
-              }}
-            >
-              <IconButton
-                size="large"
-                aria-label="account of current user"
-                aria-controls="menu-appbar"
-                aria-haspopup="true"
-                onClick={handleOpenNavMenu}
-                color="inherit"
-                sx={{
-                  padding: "5px",
-                }}
-                disableRipple={true}
-              >
-                <MenuRoundedIcon sx={{ color: "#888" }} />
-              </IconButton>
-              {openNav && (
-                <nav
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    width: "100vw",
-                    left: 0,
-                    top: 64,
-                    position: "absolute",
-                    color: "#1976d2",
-                    backgroundColor: "#fff",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-                    zIndex: 1201,
-                  }}
-                >
-                  {pages.map((page) => {
-                    const to = getPagePath(page);
-                    return (
-                      <Link
-                        key={page}
-                        onClick={handleMenuItemClick}
-                        style={{
-                          padding: '12px 18px',
-                          textDecoration: "none",
-                          color: location.pathname === to ? "#1976d2" : "#555",
-                          background: location.pathname === to ? "#e3f2fd" : "transparent",
-                          fontWeight: location.pathname === to ? 700 : 500,
-                          borderLeft: location.pathname === to ? '4px solid #1976d2' : '4px solid transparent',
-                          transition: 'all 0.2s',
-                        }}
-                        to={to}
-                      >
-                        <Typography
-                          variant="subtitle1"
-                          sx={{ fontWeight: 600, letterSpacing: 0.2 }}
-                        >
-                          {page}
-                        </Typography>
-                      </Link>
-                    );
-                  })}
-                  {isAdmin && (
-                    <Link
-                      to="/admin"
-                      onClick={handleMenuItemClick}
-                      style={{
-                        padding: '12px 18px',
-                        textDecoration: "none",
-                        color: "#777",
-                        backgroundColor: location.pathname?.includes("admin")
-                          ? "#00acef"
-                          : "transparent",
-                      }}
-                    >
-                      <Typography
-                        variant="subtitle1"
-                        sx={{ fontWeight: 600, letterSpacing: 0.2 }}
-                      >
-                        Admin
-                      </Typography>
-                    </Link>
-                  )}
-                  <Button
-                    onClick={handleLogOut}
-                    sx={{
-                      padding: '12px 18px',
-                      color: '#d32f2f',
-                      fontWeight: 600,
-                      textAlign: 'left',
-                      justifyContent: 'flex-start',
-                      fontSize: 16,
-                    }}
-                  >
-                    Logout
-                  </Button>
-                </nav>
-              )}
+
+          {showSkeleton ? (
+            <Box sx={{ display: { xs: "none", md: "flex" }, gap: 2, alignItems: "center" }}>
+              {[...Array(4)].map((_, i) => (
+                <Box key={i} sx={shimmerStyle} />
+              ))}
             </Box>
-            <Box
-              sx={{
-                flexGrow: 1,
-                display: {
-                  xs: "none",
-                  md: "flex",
-                  justifyContent: "flex-end",
-                  gap: 2,
-                  pr: 4,
-                },
-                alignItems: 'center',
-              }}
-            >
-              {pages.map((page) => {
-                const to = getPagePath(page);
-                return (
-                  <Button
-                    key={page}
-                    component={Link}
-                    to={to}
-                    sx={{
-                      color:  location.pathname === to ? "#1976d2" : "#555",
-                      background:  "transparent",
-                      fontWeight:   500,
-                      borderRadius: 2,
-                      px: 2.5,
-                      py: 1.2,
-                      minWidth: 90,
-                      boxShadow: location.pathname === to ? '0 2px 8px rgba(25,118,210,0.04)' : 'none',
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        background: '#e3f2fd',
-                        color: '#1976d2',
-                      },
-                    }}
-                    onClick={handleMenuItemClick}
-                  >
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: 0.2 }}>
-                      {page}
-                    </Typography>
-                  </Button>
-                );
-              })}
-              {isAdmin && (
-                <Button
-                  component={Link}
-                  to="/admin"
+          ) : (
+            <>
+              {/* ---------- mobile ---------- */}
+              <Box sx={{ display: { xs: "flex", md: "none" } }}>
+                <IconButton
+                  size="large"
+                  aria-label="Open navigation"
+                  aria-expanded={openNav}
+                  onClick={() => setOpenNav(!openNav)}
                   sx={{
-                    my: 2,
-                    color: location.pathname?.includes("admin")
-                      ? "#00acef"
-                      : "#777",
-                    display: "block",
+                    color: "#14213d",
+                    border: "1px solid #14213d",
+                    borderRadius: 0,
+                    p: 0.75,
+                    background: openNav ? "rgba(20,33,61,0.06)" : "transparent",
                   }}
-                  onClick={handleMenuItemClick}
                 >
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: 0.2 }}>
-                    Admin
-                  </Typography>
-                </Button>
-              )}
-              <Button
-                onClick={handleLogOut}
-                sx={{
-                  color: '#d32f2f',
-                  fontWeight: 600,
-                  fontSize: 16,
-                  px: 2.5,
-                  py: 1.2,
-                  borderRadius: 2,
-                  ml: 1,
-                  '&:hover': {
-                    background: '#ffebee',
-                  },
-                }}
-              >
-                Logout
-              </Button>
-            </Box>
-          </>
-        ) : (
-          <Button
-            component={Link}
-            to="/signin"
-            sx={{
-              color: '#1976d2',
-              fontWeight: 700,
-              fontSize: 16,
-              px: 2.5,
-              py: 1.2,
-              borderRadius: 2,
-              mr: 2,
-              '&:hover': {
-                background: '#e3f2fd',
-              },
-            }}
-          >
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-              Sign In
-            </Typography>
-          </Button>
-        )}
+                  {openNav ? <CloseRoundedIcon /> : <MenuRoundedIcon />}
+                </IconButton>
+                {openNav && (
+                  <Box
+                    component="nav"
+                    sx={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      top: 76,
+                      display: "flex",
+                      flexDirection: "column",
+                      p: 1.5,
+                      gap: 0.5,
+                      background: "#f5f1ea",
+                      borderBottom: "1px solid #14213d",
+                      animation: "hero-in .35s cubic-bezier(.2,.8,.2,1) both",
+                    }}
+                  >
+                    {items.map((item) => (
+                      <Button key={item.to} component={Link} to={item.to} onClick={handleMenuItemClick} sx={navLinkSx(isActive(item.to), true)}>
+                        <Typography sx={{ fontWeight: 600, fontSize: 16 }}>{item.label}</Typography>
+                      </Button>
+                    ))}
+                    {rightAction && <Box sx={{ pt: 1, px: 1 }}>{rightAction}</Box>}
+                  </Box>
+                )}
+              </Box>
+
+              {/* ---------- desktop ---------- */}
+              {/* with no button at the end, offset the last link's padding so its text meets the page edge */}
+              <Box component="nav" sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 0.5, mr: rightAction ? 0 : -1.75 }}>
+                {items.map((item) => (
+                  <Button key={item.to} component={Link} to={item.to} onClick={handleMenuItemClick} sx={navLinkSx(isActive(item.to))}>
+                    <Typography sx={{ fontWeight: 600, fontSize: 15, letterSpacing: 0.1 }}>{item.label}</Typography>
+                  </Button>
+                ))}
+                {rightAction && <Box sx={{ ml: 1.5 }}>{rightAction}</Box>}
+              </Box>
+            </>
+          )}
         </Toolbar>
       </AppBar>
-    </Paper>
+    </Box>
   );
 }
 

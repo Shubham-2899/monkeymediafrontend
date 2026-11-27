@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import {
   Alert, Box, Typography, TextField, Button, Collapse,
-  IconButton, CircularProgress, Stack, Tabs, Tab,
+  IconButton, Stack, Tabs, Tab,
   Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, Paper, Chip,
 } from "@mui/material";
@@ -11,6 +11,7 @@ import { IReport } from "../../utils/interface";
 import CloseIcon from "@mui/icons-material/Close";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import MailLoader from "../../components/MailLoader";
 
 // ─── Tab panel ────────────────────────────────────────────────────────────────
 
@@ -90,7 +91,7 @@ const DailySendingTab: React.FC = () => {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
       {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}><CircularProgress /></Box>
+        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}><MailLoader size={88} label="Loading report" /></Box>
       ) : (
         <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
           <Table size="small">
@@ -206,7 +207,7 @@ const HourlySendingTab: React.FC = () => {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
       {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}><CircularProgress /></Box>
+        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}><MailLoader size={88} label="Loading report" /></Box>
       ) : (
         <DataGrid
           rows={rows}
@@ -326,7 +327,7 @@ const ClickReportsTab: React.FC = () => {
       </Collapse>
 
       {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", height: 200, alignItems: "center" }}><CircularProgress /></Box>
+        <Box sx={{ display: "flex", justifyContent: "center", height: 200, alignItems: "center" }}><MailLoader size={88} label="Loading report" /></Box>
       ) : reportData.length === 0 ? (
         <Typography color="text.secondary" textAlign="center" py={4}>No reports found for the selected filters.</Typography>
       ) : (

@@ -1,0 +1,517 @@
+/* ------------------------------------------------------------------
+   MailLoader — an inbox envelope that opens, catches incoming mail,
+   closes, bounces and bumps its unread badge. One loop = 2.4s.
+------------------------------------------------------------------- */
+
+.mail-loader {
+  --ml-size: 120px;
+  --ml-cycle: 2.4s;
+  --ml-blue: #1f4e8c;
+  --ml-cyan: #c8553d;
+  --ml-violet: #1f4e8c;
+  --ml-paper: #ffffff;
+  --ml-body: #e8efff;
+  --ml-ink: #1e3a8a;
+  --ml-text: #3d4a63;
+
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--ml-size) * 0.14);
+  user-select: none;
+  pointer-events: none;
+}
+
+.mail-loader--dark {
+  --ml-text: #3d4a63;
+}
+
+/* ---------- layout variants ---------- */
+
+.mail-loader-fullscreen,
+.mail-loader-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.mail-loader-fullscreen {
+  position: fixed;
+  inset: 0;
+  background:
+    #f5f1ea;
+  animation: ml-fade-in 0.25s ease-out both;
+}
+
+.mail-loader-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(245, 241, 234, 0.82);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  animation: ml-fade-in 0.2s ease-out both;
+}
+
+.mail-loader-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 32px 0;
+}
+
+/* ---------- stage ---------- */
+
+.ml-stage {
+  position: relative;
+  width: var(--ml-size);
+  height: var(--ml-size);
+  perspective: calc(var(--ml-size) * 5);
+}
+
+/* soft glow + floor shadow */
+.ml-stage::before {
+  content: "";
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  background: none;
+  filter: blur(calc(var(--ml-size) * 0.06));
+  animation: ml-glow var(--ml-cycle) ease-in-out infinite;
+}
+
+.ml-shadow {
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  bottom: 12%;
+  height: 7%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(15, 23, 42, 0.35), transparent 70%);
+  animation: ml-shadow var(--ml-cycle) ease-in-out infinite;
+}
+
+/* ---------- the inbox envelope ---------- */
+
+.ml-envelope {
+  position: absolute;
+  left: 18%;
+  top: 34%;
+  width: 64%;
+  height: 44%;
+  transform-style: preserve-3d;
+  animation: ml-bounce var(--ml-cycle) cubic-bezier(0.3, 0.7, 0.4, 1) infinite;
+}
+
+.ml-env-tilt {
+  position: absolute;
+  inset: 0;
+  perspective: calc(var(--ml-size) * 3);
+  animation: ml-sway calc(var(--ml-cycle) * 2) ease-in-out infinite;
+}
+
+.ml-env-back {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  border-radius: 8% / 12%;
+  background: #e9e2d6;
+  border: 1.5px solid #14213d;
+  box-sizing: border-box;
+  box-shadow: calc(var(--ml-size) * 0.03) calc(var(--ml-size) * 0.03) 0 rgba(20, 33, 61, 0.12);
+}
+
+/* letter peeking out of the envelope */
+.ml-letter {
+  position: absolute;
+  z-index: 3;
+  left: 10%;
+  right: 10%;
+  top: 6%;
+  height: 80%;
+  border-radius: 6%;
+  background: var(--ml-paper);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
+  animation: ml-letter var(--ml-cycle) ease-in-out infinite;
+}
+
+.ml-letter::before,
+.ml-letter::after {
+  content: "";
+  position: absolute;
+  left: 14%;
+  height: 7%;
+  border-radius: 99px;
+  background: #14213d;
+  opacity: 0.75;
+}
+
+.ml-letter::before {
+  top: 16%;
+  width: 46%;
+}
+
+.ml-letter::after {
+  top: 30%;
+  width: 66%;
+  background: #cbd5e1;
+}
+
+.ml-env-front {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.ml-flap {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 62%;
+  z-index: 5;
+  transform-origin: 50% 0;
+  animation: ml-flap var(--ml-cycle) cubic-bezier(0.5, 0, 0.3, 1) infinite;
+}
+
+.ml-flap svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+/* ---------- unread badge ---------- */
+
+.ml-badge {
+  position: absolute;
+  z-index: 6;
+  right: -10%;
+  top: -20%;
+  min-width: calc(var(--ml-size) * 0.19);
+  height: calc(var(--ml-size) * 0.17);
+  padding: 0 calc(var(--ml-size) * 0.04);
+  box-sizing: border-box;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 500 calc(var(--ml-size) * 0.1) / 1 "Roboto Mono", ui-monospace, monospace;
+  color: #fff;
+  background: #c8553d;
+  box-shadow: 0 0 0 calc(var(--ml-size) * 0.02) rgba(255, 255, 255, 0.9),
+    0 calc(var(--ml-size) * 0.03) calc(var(--ml-size) * 0.08) rgba(201, 104, 90, 0.35);
+  transform: translateZ(1px);
+}
+
+.ml-badge.is-pop {
+  animation: ml-badge-pop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+/* ---------- incoming mail ---------- */
+
+.ml-mail {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: 26%;
+  height: 18%;
+  margin-left: -13%;
+  margin-top: -9%;
+  opacity: 0;
+  animation: ml-fly var(--ml-cycle) cubic-bezier(0.55, 0.05, 0.55, 1) infinite;
+}
+
+.ml-mail svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  filter: drop-shadow(0 2px 4px rgba(30, 58, 138, 0.35));
+}
+
+.ml-mail--1 {
+  --sx: -1.15;
+  --sy: -0.75;
+  --rot: -28deg;
+  animation-delay: 0.2s;
+}
+
+.ml-mail--2 {
+  --sx: 1.15;
+  --sy: -0.55;
+  --rot: 24deg;
+  animation-delay: 0.45s;
+}
+
+.ml-mail--3 {
+  --sx: -0.1;
+  --sy: -1.05;
+  --rot: -8deg;
+  animation-delay: 0.7s;
+}
+
+/* trails behind the incoming mail */
+.ml-mail::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  width: 90%;
+  height: 10%;
+  margin-top: -5%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, transparent, rgba(124, 196, 232, 0.7));
+  transform-origin: 100% 50%;
+}
+
+.ml-mail--1::after {
+  transform: rotate(32deg);
+}
+
+.ml-mail--2::after {
+  right: auto;
+  left: 100%;
+  background: linear-gradient(-90deg, transparent, rgba(159, 176, 216, 0.7));
+  transform-origin: 0 50%;
+  transform: rotate(-30deg);
+}
+
+.ml-mail--3::after {
+  top: auto;
+  bottom: 100%;
+  right: 50%;
+  width: 10%;
+  height: 90%;
+  margin: 0 -5% 0 0;
+  background: linear-gradient(0deg, rgba(93, 132, 201, 0.7), transparent);
+}
+
+/* ripple when mail lands */
+.ml-ripple {
+  position: absolute;
+  left: 50%;
+  top: 56%;
+  width: 70%;
+  height: 70%;
+  margin: -35% 0 0 -35%;
+  border-radius: 50%;
+  border: calc(var(--ml-size) * 0.012) solid rgba(20, 33, 61, 0.45);
+  opacity: 0;
+  animation: ml-ripple var(--ml-cycle) ease-out infinite;
+}
+
+.ml-ripple--2 {
+  animation-delay: 0.25s;
+  border-color: rgba(200, 85, 61, 0.45);
+}
+
+/* ---------- label ---------- */
+
+.ml-label {
+  font: 400 max(12px, calc(var(--ml-size) * 0.1)) / 1.2 "Roboto Mono", ui-monospace, monospace;
+  letter-spacing: 0.04em;
+  color: var(--ml-text);
+  display: inline-flex;
+  align-items: baseline;
+  white-space: nowrap;
+}
+
+.ml-dots span {
+  display: inline-block;
+  animation: ml-dot 1.2s ease-in-out infinite;
+}
+
+.ml-dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.ml-dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+/* ---------- keyframes ---------- */
+
+@keyframes ml-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes ml-fly {
+  0% {
+    opacity: 0;
+    transform: translate(calc(var(--sx) * var(--ml-size)), calc(var(--sy) * var(--ml-size))) rotate(var(--rot)) scale(0.9);
+  }
+  6% {
+    opacity: 1;
+  }
+  22% {
+    opacity: 1;
+    transform: translate(calc(var(--sx) * var(--ml-size) * 0.25), calc(var(--sy) * var(--ml-size) * 0.35 - var(--ml-size) * 0.12)) rotate(calc(var(--rot) * 0.3)) scale(0.75);
+  }
+  32% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(0deg) scale(0.3);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.3);
+  }
+}
+
+@keyframes ml-flap {
+  0%,
+  4% {
+    transform: rotateX(0deg);
+    z-index: 5;
+  }
+  9% {
+    z-index: 5;
+  }
+  9.5% {
+    z-index: 2;
+  }
+  14%,
+  60% {
+    transform: rotateX(178deg);
+    z-index: 2;
+  }
+  66% {
+    z-index: 2;
+  }
+  66.5% {
+    z-index: 5;
+  }
+  72%,
+  100% {
+    transform: rotateX(0deg);
+    z-index: 5;
+  }
+}
+
+@keyframes ml-letter {
+  0%,
+  6% {
+    transform: translateY(18%);
+  }
+  18%,
+  56% {
+    transform: translateY(-38%);
+  }
+  66%,
+  100% {
+    transform: translateY(18%);
+  }
+}
+
+@keyframes ml-bounce {
+  0%,
+  72% {
+    transform: translateY(0) scale(1);
+  }
+  76% {
+    transform: translateY(4%) scale(1.06, 0.92);
+  }
+  84% {
+    transform: translateY(-14%) scale(0.97, 1.04);
+  }
+  92% {
+    transform: translateY(0) scale(1.02, 0.98);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ml-sway {
+  0%,
+  100% {
+    transform: rotateY(-14deg) rotateX(8deg);
+  }
+  50% {
+    transform: rotateY(14deg) rotateX(4deg);
+  }
+}
+
+@keyframes ml-shadow {
+  0%,
+  72%,
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  84% {
+    transform: scaleX(0.75);
+    opacity: 0.6;
+  }
+}
+
+@keyframes ml-glow {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(0.92);
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes ml-ripple {
+  0%,
+  36% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  40% {
+    opacity: 1;
+  }
+  62% {
+    opacity: 0;
+    transform: scale(1.25);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.25);
+  }
+}
+
+@keyframes ml-badge-pop {
+  0% {
+    transform: scale(0.4);
+  }
+  60% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes ml-dot {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  30% {
+    transform: translateY(-30%);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mail-loader *,
+  .mail-loader *::before,
+  .mail-loader *::after {
+    animation-duration: calc(var(--ml-cycle) * 2) !important;
+  }
+}

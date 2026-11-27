@@ -17,6 +17,7 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { apiGet, apiPost, apiPut, apiDelete, apiPatch } from "../../../../utils/api";
 import { ServerDomain, ServerDomainIp } from "../../../../Interfaces";
+import MailLoader from "../../../../components/MailLoader";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const emptyIp = () => ({ ip: "", isMainIp: false, wentSpam: false, provider: "" });
@@ -355,7 +356,7 @@ const ServerDomains: React.FC = () => {
       {/* Table */}
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: 300 }}>
-          <CircularProgress />
+          <MailLoader size={88} label="Loading servers" />
         </Box>
       ) : (
         <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>

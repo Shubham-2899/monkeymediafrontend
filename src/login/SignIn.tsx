@@ -1,21 +1,14 @@
 import * as React from "react";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import MarkEmailReadRoundedIcon from "@mui/icons-material/MarkEmailReadRounded";
+import AlternateEmailRoundedIcon from "@mui/icons-material/AlternateEmailRounded";
+import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  Avatar,
-  Button,
-  TextField,
-  Grid,
-  Box,
-  Typography,
-  Alert,
-  CircularProgress,
-  Paper,
-  Stack,
-} from "@mui/material";
-// import Loading from '../../components/Loading';
+import { Button, TextField, Box, Typography, Alert, Stack, InputAdornment } from "@mui/material";
 import "./signup-signin-styles.css";
+import AuthShell from "./AuthShell";
+import MailLoader from "../components/MailLoader";
 import { useUserAuth } from "../contexts/UserAuthContext";
 
 const Signin = () => {
@@ -56,130 +49,83 @@ const Signin = () => {
   }, []);
 
   return (
-    <>
-      <Box
-        sx={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#f4f6fa",
-          position: "relative",
-        }}
-      >
-        <Paper
-          elevation={2}
-          sx={{
-            p: { xs: 2, sm: 4 },
-            borderRadius: 3,
-            minWidth: 340,
-            maxWidth: 400,
-            width: "100%",
-            position: "relative",
+    <AuthShell>
+      <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
+        <Box className="auth-badge">
+          <MarkEmailReadRoundedIcon sx={{ fontSize: 24 }} />
+        </Box>
+        <Box>
+          <Typography variant="h5" sx={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26 }}>
+            Welcome back
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Sign in to launch your next campaign
+          </Typography>
+        </Box>
+      </Stack>
+      {typeof error === "string" && error && (
+        <Alert severity="error" variant="outlined" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+      <Box component="form" onSubmit={handleSubmit} sx={{ position: "relative" }}>
+        <TextField
+          margin="normal"
+          required
+          fullWidth
+          id="email"
+          label="Email Address"
+          name="email"
+          autoComplete="email"
+          autoFocus
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={loading}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <AlternateEmailRoundedIcon sx={{ color: "text.secondary" }} />
+              </InputAdornment>
+            ),
           }}
+        />
+        <TextField
+          margin="normal"
+          required
+          fullWidth
+          name="password"
+          label="Password"
+          type="password"
+          id="password"
+          autoComplete="current-password"
+          onChange={(e) => setPassword(e.target.value)}
+          disabled={loading}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <LockOutlinedIcon sx={{ color: "text.secondary" }} />
+              </InputAdornment>
+            ),
+          }}
+        />
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 0.5, mb: 2.5 }}>
+          <Link to="/forgot-password" className="auth-link">
+            Forgot password?
+          </Link>
+        </Box>
+        <Button
+          type="submit"
+          fullWidth
+          variant="contained"
+          size="large"
+          endIcon={<SendRoundedIcon />}
+          sx={{ borderRadius: 0, py: 1.4, fontSize: 16, boxShadow: "4px 4px 0 var(--stamp)" }}
+          disabled={loading}
         >
-          <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
-            <Avatar sx={{ bgcolor: "secondary.main", width: 48, height: 48 }}>
-              <LockOutlinedIcon fontSize="large" />
-            </Avatar>
-            <Box>
-              <Typography variant="h5" fontWeight={600} color="#333">
-                Sign In
-              </Typography>
-              <Typography variant="body2" sx={{ color: "#666" }}>
-                Access your application
-              </Typography>
-            </Box>
-          </Stack>
-          {typeof error === "string" && error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-          <Box
-            component="form"
-            onSubmit={handleSubmit}
-            sx={{ mt: 1, position: "relative" }}
-          >
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="Email Address"
-              name="email"
-              autoComplete="email"
-              autoFocus
-              onChange={(e) => setEmail(e.target.value)}
-              sx={{ mb: 2 }}
-              disabled={loading}
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Password"
-              type="password"
-              id="password"
-              autoComplete="current-password"
-              onChange={(e) => setPassword(e.target.value)}
-              sx={{ mb: 2 }}
-              disabled={loading}
-            />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{
-                borderRadius: 2,
-                py: 1.2,
-                fontWeight: 600,
-                fontSize: 16,
-                mb: 1,
-              }}
-              disabled={loading}
-            >
-              Sign In
-            </Button>
-            <Grid container>
-              <Grid item xs>
-                <Link
-                  to="/forgot-password"
-                  className="links"
-                  style={{
-                    textDecoration: "none",
-                    color: "#1976d2",
-                    fontWeight: 500,
-                  }}
-                >
-                  Forgot password?
-                </Link>
-              </Grid>
-            </Grid>
-            {loading && (
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  bgcolor: "rgba(255,255,255,0.7)",
-                  zIndex: 10,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: 3,
-                }}
-              >
-                <CircularProgress />
-              </Box>
-            )}
-          </Box>
-        </Paper>
+          Sign In
+        </Button>
       </Box>
-    </>
+      {loading && <MailLoader variant="overlay" size={96} label="Signing you in" />}
+    </AuthShell>
   );
 };
 

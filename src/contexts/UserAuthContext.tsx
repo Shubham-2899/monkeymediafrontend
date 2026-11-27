@@ -17,6 +17,12 @@ import { jwtDecode as jwtDecodeFn } from "jwt-decode";
 
 const userAuthContext = createContext<AuthContextModel>({} as AuthContextModel);
 
+// Firebase is temporarily disabled in /firebase.ts; auth calls fail with a clear message.
+function requireAuth() {
+  if (!auth) throw new Error("Sign-in is temporarily unavailable: Firebase is disabled (see firebase.ts).");
+  return auth;
+}
+
 export function useAuth(): AuthContextModel {
   return useContext(userAuthContext);
 }
@@ -30,8 +36,8 @@ export function UserAuthContextProvider({ children }: AuthProviderProps) {
     //   const persistence = false  //remember me functionality
     //  ? auth.Persistence.LOCAL
     //  : auth.Auth.Persistence.SESSION;
-    await setPersistence(auth, browserSessionPersistence);
-    const res: any = await signInWithEmailAndPassword(auth, email, password);
+    await setPersistence(requireAuth(), browserSessionPersistence);
+    const res: any = await signInWithEmailAndPassword(requireAuth(), email, password);
     const token = res?.user?.accessToken;
     if (token) {
       sessionStorage.setItem("authToken", token);
@@ -49,22 +55,27 @@ export function UserAuthContextProvider({ children }: AuthProviderProps) {
   function signUp(email: string, password: string, username: string) {
     console.log("username:", username);
     setLogin(false);
-    return createUserWithEmailAndPassword(auth, email, password);
+    return createUserWithEmailAndPassword(requireAuth(), email, password);
   }
   function logOut() {
-    return signOut(auth);
+    return signOut(requireAuth());
   }
 
   function resetPassword(email: string) {
-    return sendPasswordResetEmail(auth, email);
+    return sendPasswordResetEmail(requireAuth(), email);
   }
 
   function googleSignIn() {
     const googleAuthProvider = new GoogleAuthProvider();
-    return signInWithPopup(auth, googleAuthProvider);
+    return signInWithPopup(requireAuth(), googleAuthProvider);
   }
 
   useEffect(() => {
+    // Firebase disabled: no user session; stop the loading state so pages render.
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(auth, (currentuser) => {
       setUser(currentuser);
       setLoading(false);

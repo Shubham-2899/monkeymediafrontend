@@ -43,6 +43,7 @@ import {
 } from "@mui/icons-material";
 import { Campaign, CampaignStats } from "../Interfaces";
 import { CampaignService } from "../utils/campaignService";
+import MailLoader from "./MailLoader";
 
 interface EmailAnalyticsProps {
   campaignId?: string;
@@ -419,7 +420,7 @@ const EmailAnalytics: React.FC<EmailAnalyticsProps> = () => {
                 </Typography>
                 {loading ? (
                   <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-                    <CircularProgress color="primary" />
+                    <MailLoader size={88} label="Loading campaigns" />
                   </Box>
                 ) : (
                   <TableContainer component={Paper} elevation={0} sx={{ border: "1px solid #e0e0e0" }}>
