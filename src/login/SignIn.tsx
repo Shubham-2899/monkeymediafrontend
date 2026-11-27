@@ -11,6 +11,15 @@ import AuthShell from "./AuthShell";
 import MailLoader from "../components/MailLoader";
 import { useUserAuth } from "../contexts/UserAuthContext";
 
+/** Maps sign-in failures to a short, user-facing message. */
+function friendlySignInError(err: unknown) {
+  const code = (err as { code?: string })?.code;
+  if (code === "auth/too-many-requests") return "Too many sign-in attempts. Please wait a few minutes and try again.";
+  if (code === "auth/network-request-failed") return "We couldn't reach the server. Check your internet connection and try again.";
+  // Wrong email/password, unknown user, invalid email, or sign-in currently unavailable.
+  return "Wrong email or password. Please check your credentials and try again.";
+}
+
 const Signin = () => {
   const [error, setError] = useState<unknown>("");
   const [loading, setLoading] = useState(false);
@@ -32,10 +41,10 @@ const Signin = () => {
       // if (userData) sessionStorage.setItem("user", userData);
       setLogin(true);
       navigate("/home");
-    } catch (err: any) {
+    } catch (err: unknown) {
+      // Keep the technical reason in the console; show the user a plain message.
       console.log("🚀 ~ handleSubmit ~ err:", err);
-
-      setError(err.message);
+      setError(friendlySignInError(err));
     }
     setLoading(false);
   }
@@ -123,6 +132,12 @@ const Signin = () => {
         >
           Sign In
         </Button>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 3, textAlign: "center" }}>
+          Don&apos;t have an account?{" "}
+          <Link to="/contact-us" className="auth-link">
+            Contact us to register
+          </Link>
+        </Typography>
       </Box>
       {loading && <MailLoader variant="overlay" size={96} label="Signing you in" />}
     </AuthShell>
